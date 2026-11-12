@@ -1,0 +1,1676 @@
+
+
+
+
+
+
+
+Software Design Description
+
+
+
+ 
+
+Revision History
+
+
+TABLE OF CONTENTS
+
+
+
+
+
+INTRODUCTION
+Purpose
+Tài liệu này mô tả thiết kế phần mềm của Hệ thống Quản lý Bán hàng quán cà phê Bình Yên Là Nhà, cung cấp tổng quan về kiến ​​trúc hệ thống, các thành phần, thiết kế cơ sở dữ liệu, giao diện người dùng và tương tác hệ thống, đóng vai trò là tài liệu tham khảo kỹ thuật cho việc phát triển hệ thống.
+Scope
+Đối tượng: Nhóm phân tích, thiết kế, xây dựng hệ thống và giảng viên môn học.
+Definitions, Acronyms, and Abbreviations
+
+References
+
+
+
+SYSTEM ARCHITECTURAL DESIGN 
+System Description
+Hệ thống quản lý bán hàng Bình Yên Là Nhà Coffee & Tea là ứng dụng dựa trên nền tảng web, được xây dựng nhằm số hóa quy trình bán hàng và quản lý của quán cà phê quy mô nhỏ, chủ yếu bán mang đi và có nhận đơn từ GrabFood, ShopeeFood. Hệ thống giúp quán chuyển từ ghi chép tay và Excel sang quản lý điện tử, tra cứu đơn hàng nhanh và tự động tổng hợp doanh thu.
+Hệ thống hỗ trợ hai nhóm người dùng là Quản lý (chủ quán) và Nhân viên, gồm 3 phân hệ:
+●	Bán hàng: Phục vụ nhân viên tạo đơn hàng (khách tại quán, mang đi và đơn GrabFood/ShopeeFood nhập thủ công), xác nhận thanh toán bằng tiền mặt hoặc chuyển khoản, sửa đơn chưa thanh toán và tra cứu đơn hàng.
+●	Quản lý: Phục vụ quản lý trong việc quản lý món và giá món, thông tin nhân viên, lịch ca làm, tài khoản và phân quyền người dùng.
+●	Báo cáo: Cung cấp số liệu doanh thu theo ngày, tuần, tháng, năm (tổng số đơn, tiền mặt, tiền chuyển khoản, món bán chạy, đơn hủy) và so sánh dữ liệu doanh thu giữa các kỳ.
+System Architecture 
+Chosen System Architecture
+Hệ thống được thiết kế theo mô hình Client - Server kết hợp với kiến trúc 3 tầng (Three-Tier Architecture), triển khai dưới dạng ứng dụng web. Mô hình này chia tách hệ thống thành các phần riêng biệt về giao diện, xử lý nghiệp vụ và dữ liệu, giúp hệ thống dễ bảo trì, an toàn và dễ mở rộng.
+Lý do lựa chọn kiến trúc này:
+	Hệ thống có hai nhóm người dùng với quyền hạn khác nhau, cần kiểm soát phân quyền tập trung tại máy chủ.
+	Quản lý cần theo dõi tình hình quán trên điện thoại khi không có mặt tại quán, nên dữ liệu phải được lưu tập trung và truy cập được từ xa.
+Ứng dụng web chạy được trên cả máy tính tại quầy và điện thoại mà không cần cài đặt, chỉ cần xây dựng một bộ giao diện.
+●	Tầng Trình bày (Presentation Tier):
+○	Vai trò: Giao tiếp với người dùng, hiển thị thông tin, chỉ hiển thị các chức năng đúng với vai trò của người dùng và gửi yêu cầu xử lý xuống tầng ứng dụng.
+○	Thành phần triển khai: Giao diện web responsive gồm các màn hình Đăng nhập, Đơn hàng, Món, Doanh thu, Nhân viên – Ca làm, Tài khoản.
+○	Thiết bị hỗ trợ: Máy tính tại quầy (nhân viên) và máy tính hoặc điện thoại thông minh (quản lý) truy cập qua trình duyệt web.
+●	Tầng Ứng dụng (Application Tier):
+○	Vai trò: Chứa và xử lý toàn bộ logic nghiệp vụ, là trung tâm điều phối nhận yêu cầu từ client và truy xuất dữ liệu từ cơ sở dữ liệu.
+○	Thành phần xử lý: Các class nghiệp vụ chính gồm Tài khoản, Nhân viên, Ca làm, Món, Đơn hàng, Chi tiết đơn hàng.
+○	Nhiệm vụ: Xác thực đăng nhập và phân quyền Quản lý/Nhân viên; tính thành tiền và tổng thanh toán của đơn hàng; kiểm tra các quy tắc nghiệp vụ (nhân viên không được sửa đơn đã thanh toán, mỗi ca làm có hai nhân viên); tổng hợp và so sánh doanh thu.
+○	Giao thức: Giao tiếp với tầng trình bày qua HTTPS.
+●	Tầng Dữ liệu (Data Tier):
+○	Vai trò: Lưu trữ bền vững, truy xuất dữ liệu và đảm bảo tính toàn vẹn của thông tin thông qua khóa chính, khóa ngoại và các ràng buộc CHECK.
+○	Thành phần triển khai: Hệ quản trị cơ sở dữ liệu SQL Server với các bảng đã chuẩn hóa: TAIKHOAN, NHANVIEN, CALAM, PHANCONGCA, MON, DONHANG, CHITIET_DONHANG.
+Design Constraints
+General constraints
+●	Quy trình nghiệp vụ: Thiết kế phải tuân thủ quy trình To-Be đã thống nhất với chủ quán: nhân viên ghi nhận đơn, xác nhận thanh toán rồi mới pha chế; đơn từ GrabFood/ShopeeFood được nhập thủ công vào hệ thống.
+●	Phân quyền: Hệ thống có hai vai trò. Nhân viên chỉ được tạo đơn, thanh toán, sửa đơn chưa thanh toán và tìm kiếm món; các thao tác thay đổi giá, thêm/xóa món, xem doanh thu, quản lý nhân viên, tài khoản và sửa đơn đã thanh toán chỉ dành cho quản lý.
+●	Ngôn ngữ và định dạng: Giao diện sử dụng Tiếng Việt, tiền tệ hiển thị theo VND và ngày tháng theo định dạng dd/mm/yyyy.
+●	Thời gian và nhân lực: Dự án thực hiện trong một học kỳ với 6 thành viên nên chỉ tập trung vào các chức năng cốt lõi.
+Hardware constraints
+●	Phía máy khách:
+○	Máy tính tại quầy: RAM tối thiểu 4 GB, màn hình độ phân giải từ 1366×768 để hiển thị đầy đủ màn hình tạo đơn hàng.
+○	Điện thoại của quản lý: tương thích với các dòng điện thoại Android/iOS phổ biến; giao diện cần hiển thị đầy đủ trên màn hình nhỏ.
+○	Thiết bị ngoại vi: Quán không có máy in hóa đơn và máy quét mã nên hệ thống không phụ thuộc vào các thiết bị này.
+●	Phía máy chủ:
+○	Quy mô quán nhỏ (2 nhân viên mỗi ca, lượng đơn không quá lớn) nên máy chủ cấu hình vừa phải là đủ, khuyến nghị CPU 2 nhân, RAM 4 GB.
+○	Dung lượng ổ cứng cần đủ lớn và có khả năng mở rộng để lưu trữ lịch sử đơn hàng trong nhiều năm, phục vụ so sánh doanh thu theo năm.
+●	Kết nối mạng: Cần kết nối Internet ổn định tại quán và trên điện thoại của quản lý.
+Components description
+Decomposition description
+
+Database description
+Database logical design
+Table design (based on class design)
+Normalization
+Database diagram
+
+Database physical design
+(Sử dụng SQL Server Management System)
+Bảng TAIKHOAN
+Table NHANVIEN
+
+Table CALAM
+Table PHANCONGCA
+Table MON
+Table DONHANG
+Table CHITIET_DONHANG
+
+Ước lượng dung lượng lưu trữ
+ 
+External interfaces
+User interfaces
+Ma trận ánh xạ màn hình và Use Case
+
+Screen flow
+Luồng màn hình Nhân viên
+
+Luồng màn hình Quản lý
+
+Screen specification
+Screen Đăng nhập
+
+
+
+Screen Thông tin đăng nhập không đầy đủ
+
+
+
+Screen Tên đăng nhập hoặc mật khẩu sai
+
+
+
+Screen Tài khoản bị khóa
+
+
+
+Screen Quản lý đơn hàng (Danh sách đơn hàng Trang 1)
+
+
+
+Screen Quản lý đơn hàng (Danh sách đơn hàng Trang 2)
+
+
+
+Screen Quản lý đơn hàng (Danh sách đơn hàng Trang 3)
+
+
+
+
+Screen Quản lý đơn hàng (Giao diện Nhân viên)
+
+
+
+Screen Tạo đơn hàng
+
+
+
+Screen Tạo đơn hàng thành công
+
+
+
+Screen Tạo đơn hàng - Bỏ trống số lượng
+
+
+
+Screen Số lượng không hợp lệ
+
+
+
+Screen Quản lý món
+
+
+
+Screen Quản lý món (Giao diện Nhân viên)
+
+
+
+Screen Cập nhật thông tin món
+
+
+
+Screen Cập nhật thông tin món thành công
+
+
+
+Screen Tìm thấy món
+
+
+
+Screen Không tìm thấy món
+
+
+
+Screen Xóa món
+
+
+
+Screen Xóa món thành công
+
+
+
+Screen Chuyển trạng thái ngừng bán
+
+
+
+Screen Khung chọn thời gian
+
+
+
+Screen “Ngày bắt đầu” lớn hơn “Ngày kết thúc”
+
+
+
+Screen Xem báo cáo doanh thu
+
+
+
+Screen So sánh dữ liệu doanh thu
+
+
+Xem so sánh dữ liệu doanh thu
+
+
+
+
+Screen Quản lý nhân viên – Quản lý thông tin nhân viên
+
+
+
+Screen Thêm nhân viên mới
+
+
+
+Screen Thêm nhân viên thành công
+
+
+
+Screen Thêm nhân viên – Bỏ trống thông tin
+
+
+
+Screen Thêm nhân viên – Nhập trùng SĐT
+
+
+
+Screen Sửa thông tin nhân viên
+
+
+
+Screen Sửa thông tin nhân viên - Thành công
+
+
+
+Screen Sửa thông tin nhân viên - Bỏ trống thông tin
+
+
+
+Screen Sửa thông tin nhân viên - Nhập trùng SĐT
+
+
+
+Screen Xóa nhân viên – Xác nhận xóa
+
+
+
+Screen Xóa nhân viên thành công
+
+
+
+Screen Xóa nhân viên - Chuyển trạng thái Nghỉ làm
+
+
+
+Screen Quản lý ca làm (Lịch làm việc theo ngày)
+
+
+
+Screen Quản lý ca làm (Lịch làm việc theo tuần)
+
+
+
+Screen Quản lý ca làm (Lịch làm việc theo tháng)
+
+
+
+Screen Lập lịch làm việc
+
+
+
+Screen Lập lịch làm việc - Bỏ trống thời gian
+
+
+
+Screen Lập lịch làm việc - Thời gian không hợp lệ
+
+
+
+Screen Lập lịch làm việc – Chưa chọn nhân viên
+
+
+
+Screen Lập lịch làm việc-Trùng lịch
+
+
+
+Screen Sửa lịch làm việc
+
+
+
+Screen Sửa lịch làm việc thành công
+
+
+
+Screen Lập lịch làm việc thành công
+
+
+
+Screen Quản lý tài khoản
+
+
+
+Screen Tạo tài khoản
+
+
+
+Screen Drop list Vai trò
+
+
+
+Screen Drop list Mã nhân viên
+
+
+
+Screen Tạo tài khoản thành công
+
+
+
+Screen Bỏ trống tên đăng nhập, mật khẩu
+
+
+
+Screen Tên đăng nhập đã tồn tại
+
+
+
+Screen Mật khẩu không đạt yêu cầu
+
+
+
+Screen Nhân viên đã có tài khoản
+
+
+
+Screen Sửa thông tin tài khoản
+
+
+
+Screen Cập nhật thành công
+
+
+
+Screen Tên đăng nhập đã tồn tại
+
+
+
+Screen Mật khẩu không đạt yêu cầu
+
+
+
+Screen Nhân viên đã có tài khoản
+
+
+
+Screen Xóa tài khoản - Màn hình xác nhận
+
+
+
+Screen Xóa tài khoản thành công
+
+
+
+Screen Khóa tài khoản
+
+
+
+Screen Không thể xóa tài khoản
+
+
+
+Screen Đăng xuất
+
+
+Screen Thông báo: Lỗi hệ thống
+
+
+
+
+=== TABLE ===
+System name	Hệ thống quản lý bán hàng Bình Yên Là Nhà Coffee & Tea	Hệ thống quản lý bán hàng Bình Yên Là Nhà Coffee & Tea
+Project team	Tran Quang Hoang	Leader
+Project team	Le Dang Bien	Member
+Project team	Nguyen Tan Dat	Member
+Project team	Doan Tan Huy	Member
+Project team	Nguyen Phuong Linh	Member
+Project team	Ho Nhu Ngoc	Member
+
+=== TABLE ===
+Version	Date	Author	Change Description
+1.0	05/11/2026	50K211.01.3007	
+			
+
+=== TABLE ===
+Term/Acronym	Definition
+FK	Foreign key
+	
+
+=== TABLE ===
+No.	Table
+1	TAIKHOAN (MaTaiKhoan, TenDangNhap, MatKhau, MaNhanVien (FK), VaiTro, TrangThai)
+2	NHANVIEN (MaNhanVien, TenNhanVien, SDT, DiaChi, NgayVaoLam, TrangThai)
+3	CALAM (MaCaLam, NgayLam, GioBatDau, GioKetThuc, TrangThai, MaNhanVien (FK))
+4	MON (MaMon, TenMon, GiaBan, TrangThai)
+5	DONHANG (MaDonHang, NgayTao, NguonDonHang, PhuongThucThanhToan, TrangThaiThanhToan, TrangThaiDonHang, TongTien, GiamGia, TongThanhToan, MaNhanVien (FK), Ghi Chu)
+6	CHITIET_DONHANG (MaDonHang, MaMon, SoLuong, DonGia, ThanhTien)
+
+=== TABLE ===
+No.	Table
+1	TAIKHOAN (MaTaiKhoan, TenDangNhap, MatKhau, MaNhanVien (FK), VaiTro, TrangThai)
+2	NHANVIEN (MaNhanVien, TenNhanVien, SDT, DiaChi, NgayVaoLam, TrangThai)
+3	CALAM (MaCaLam, GioBatDau, GioKetThuc)
+4	PHANCONGCA (MaCaLam (FK), MaNhanVien (FK), NgayLam, TrangThai)
+5	MON (MaMon, TenMon, GiaBan, TrangThai)
+6	DONHANG (MaDonHang, NgayTao, NguonDonHang, PhuongThucThanhToan, TrangThaiThanhToan, TrangThaiDonHang, TongTien, GiamGia, TongThanhToan, MaNhanVien (FK), Ghi Chu)
+7	CHITIET_DONHANG (MaDonHang, MaMon, SoLuong, DonGia, ThanhTien)
+
+=== TABLE ===
+No.	Column name	Datatype	Constraints	Notes
+1	MaTaiKhoan	CHAR(5)	Primary key	Mã tài khoản 
+2	TenDangNhap	VARCHAR(20)	Unique, Not null	Tên đăng nhập
+3	MatKhau	VARCHAR(50)	Not null	Mật khẩu
+4	MaNhanVien	VARCHAR(5)	Foreign key	Mã nhân viên
+5	VaiTro	BIT	Notnull	Vai trò (0=Quản lý, 1=Nhân viên) 
+6	TrangThai	BIT	Default 1	Trạng thái (0=Khóa, 1=Hoạt động)
+
+=== TABLE ===
+No.	Column name	Datatype	Constraints	Notes
+1	MaNhanVien	CHAR(5)	Primary key	Mã nhân viên
+2	TenNhanVien	NVARCHAR(50)	Not null	Tên nhân viên
+3	SDT	VARCHAR(12)	Unique, Not null	Số điện thoại
+4	DiaChi	NVARCHAR(100)	Not null	Địa chỉ
+5	NgayVaoLam	DATE	Null	Ngày vào làm
+6	TrangThai	BIT	Default 1	Trạng thái (0=Nghỉ làm; 1=Còn làm)
+
+=== TABLE ===
+No.	Column name	Datatype	Constraints	Notes
+1	MaCaLam	INT	Primary key	Mã nhân viên (int identity tự tăng)
+2	GioBatDau	TIME	Not null	Tên nhân viên
+3	GioKetThuc	TIME	Not null	Số điện thoại
+CHECK(GioBatDau < GioKetThuc)	CHECK(GioBatDau < GioKetThuc)	CHECK(GioBatDau < GioKetThuc)	CHECK(GioBatDau < GioKetThuc)	CHECK(GioBatDau < GioKetThuc)
+
+=== TABLE ===
+No.	Column name	Datatype	Constraints	Notes
+1	MaCaLam	INT	FK, Not null	Mã ca làm
+2	MaNhanVien	CHAR(5)	FK, Not null	Mã nhân viên
+3	NgayLam	DATE	Not null	Ngày làm
+4	TrangThai	TINYINT	Default 1	Trạng thái (1=Được phân công; 2=Đã đổi; 0=Hủy)
+Primary key(MaCaLam, MaNhanVien)	Primary key(MaCaLam, MaNhanVien)	Primary key(MaCaLam, MaNhanVien)	Primary key(MaCaLam, MaNhanVien)	Primary key(MaCaLam, MaNhanVien)
+
+=== TABLE ===
+No.	Column name	Datatype	Constraints	Notes
+1	MaMon	CHAR(4)	Primary key	Mã món
+2	TenMon	NVARCHAR(200)	Not null	Tên món
+3	GiaBan	DECIMAL(18,2)	Not null, Check(GiaBan>=0)	Giá bán
+4	TrangThai	BIT	Default 1	Trạng thái (1=Đang bán; 0=Ngừng bán)
+
+=== TABLE ===
+No.	Column name	Datatype	Constraints	Notes
+1	MaDonHang	CHAR(9)	Primary key	Mã đơn hàng
+2	MaNhanVien	CHAR(5)	FK, Not null	Mã nhân viên
+3	ThoiGianTao	DATETIME	Not null	Thời gian tạo đơn
+4	NguonDonHang	TINYINT	Not null	Nguồn đơn hàng (0=Trực tiếp; 1=GrabFood; 2=ShopeeFood)
+5	PhuongThucThanhToan	BIT	Not null	Phương thức thanh toán 0=Tiền mặt; 1=Chuyển khoản)
+6	TrangThaiThanhToan	BIT	Default 0	Trạng thái thanh toán (0=Chưa thanh toán; 1=Đã thanh toán)
+7	TrangThaiDonHang	TINYINT	Default 1	Trạng thái đơn hàng (1=Đang xử lý; 2=Hoàn thành; 0=Hủy)
+8	TongTien	DECIMAL(18,2)	Check(TongTien>=0)	Tổng tiền
+9	GiamGia	DECIMAL(18,2)	Check(GiamGia>=0)	Giảm giá
+10	TongThanhToan	DECIMAL(18,2)	As(TongTien-GiamGia)	Tổng thanh toán
+11	GhiChu	NVARCHAR(200)	Null	Ghi chú
+
+=== TABLE ===
+No.	Column name	Datatype	Constraints	Notes
+1	MaDonHang	CHAR(9)	FK, Not null	Mã đơn hàng
+2	MaMon	CHAR(4)	FK, Not null	Mã món
+3	SoLuong	SMALLINT	Check(SoLuong>0)	Số lượng
+4	DonGia	DECIMAL(18,2)	Check(DonGia>=0)	Đơn giá
+5	ThanhTien	DECIMAL(18,2)	As(SoLuong*DonGia)	Thành tiền
+Primary key(MaDonHang, MaMon)	Primary key(MaDonHang, MaMon)	Primary key(MaDonHang, MaMon)	Primary key(MaDonHang, MaMon)	Primary key(MaDonHang, MaMon)
+
+=== TABLE ===
+Tên bảng	Tên cột	Dung lượng (byte)
+TAIKHOAN	MaTaiKhoan	5
+TAIKHOAN	TenDangNhap	20
+TAIKHOAN	MatKhau	50
+TAIKHOAN	MaNhanVien	5
+TAIKHOAN	VaiTro	1
+TAIKHOAN	Tổng dung lượng thô	81
+TAIKHOAN	Overhead	30%
+TAIKHOAN	Tổng dung lượng cho 1 bản ghi	105,3
+TAIKHOAN	Số lượng bản ghi khởi tạo ban đầu	1.000
+TAIKHOAN	Tổng dung lượng lưu trữ ban đầu	1.053.000
+TAIKHOAN	Ước lượng dữ liệu gia tăng mỗi tháng	100
+TAIKHOAN	Dung lượng lưu trữ sau 1 năm	231.660
+Tên bảng	Tên cột	Dung lượng (byte)
+NHANVIEN	MaNhanVien	5
+NHANVIEN	TenNhanVien	100
+NHANVIEN	SDT	12
+NHANVIEN	DiaChi	200
+NHANVIEN	NgayVaoLam	10
+NHANVIEN	TrangThai	1
+NHANVIEN	Tổng dung lượng thô	328
+NHANVIEN	Overhead	30%
+NHANVIEN	Tổng dung lượng cho 1 bản ghi	426,2
+NHANVIEN	Số lượng bản ghi khởi tạo ban đầu	1.000
+NHANVIEN	Tổng dung lượng lưu trữ ban đầu	426.400
+NHANVIEN	Ước lượng dữ liệu gia tăng mỗi tháng	100
+NHANVIEN	Dung lượng lưu trữ sau 1 năm	938.080
+Tên bảng	Tên cột	Dung lượng (byte)
+CALAM	MaCaLam	4
+CALAM	GioBatDau	5
+CALAM	GioKetThuc	5
+CALAM	Tổng dung lượng thô	14
+CALAM	Overhead	30%
+CALAM	Tổng dung lượng cho 1 bản ghi	18,2
+CALAM	Số lượng bản ghi khởi tạo ban đầu	1.000
+CALAM	Tổng dung lượng lưu trữ ban đầu	18.200
+CALAM	Ước lượng dữ liệu gia tăng mỗi tháng	100
+CALAM	Dung lượng lưu trữ sau 1 năm	40.040
+Tên bảng	Tên cột	Dung lượng (byte)
+PHANCONGCA	MaCaLam	4
+PHANCONGCA	MaNhanVien	5
+PHANCONGCA	NgayLam	10
+PHANCONGCA	TrangThai	1
+PHANCONGCA	Tổng dung lượng thô	20
+PHANCONGCA	Overhead	30%
+PHANCONGCA	Tổng dung lượng cho 1 bản ghi	26
+PHANCONGCA	Số lượng bản ghi khởi tạo ban đầu	1.000
+PHANCONGCA	Tổng dung lượng lưu trữ ban đầu	26.000
+PHANCONGCA	Ước lượng dữ liệu gia tăng mỗi tháng	100
+PHANCONGCA	Dung lượng lưu trữ sau 1 năm	57.200
+Tên bảng	Tên cột	Dung lượng (byte)
+MON	MaMon	4
+MON	TenMon	400
+MON	GiaBan	9
+MON	TrangThai	1
+MON	Tổng dung lượng thô	414
+MON	Overhead	30%
+MON	Tổng dung lượng cho 1 bản ghi	538,2
+MON	Số lượng bản ghi khởi tạo ban đầu	1.000
+MON	Tổng dung lượng lưu trữ ban đầu	538.200
+MON	Ước lượng dữ liệu gia tăng mỗi tháng	100
+MON	Dung lượng lưu trữ sau 1 năm	1.184.040
+Tên bảng	Tên cột	Dung lượng (byte)
+DONHANG	MaDonHang	9
+DONHANG	MaNhanVien	5
+DONHANG	ThoiGianTao	8
+DONHANG	NguonDonHang	1
+DONHANG	PhuongThucThanhToan	1
+DONHANG	TrangThaiThanhToan	0
+DONHANG	TrangThaiDonHang	1
+DONHANG	TongTien	9
+DONHANG	GiamGia	9
+DONHANG	TongThanhToan	9
+DONHANG	GhiChu	400
+DONHANG	Tổng dung lượng thô	452
+DONHANG	Overhead	30%
+DONHANG	Tổng dung lượng cho 1 bản ghi	587,6
+DONHANG	Số lượng bản ghi khởi tạo ban đầu	1.000
+DONHANG	Tổng dung lượng lưu trữ ban đầu	587.600
+DONHANG	Ước lượng dữ liệu gia tăng mỗi tháng	100
+DONHANG	Dung lượng lưu trữ sau 1 năm	1.292.720
+Tên bảng	Tên cột	Dung lượng (byte)
+CHITIET_DONHANG	MaDonHang	9
+CHITIET_DONHANG	MaMon	4
+CHITIET_DONHANG	SoLuong	2
+CHITIET_DONHANG	DonGia	9
+CHITIET_DONHANG	ThanhTien	9
+CHITIET_DONHANG	Tổng dung lượng thô	33
+CHITIET_DONHANG	Overhead	30%
+CHITIET_DONHANG	Tổng dung lượng cho 1 bản ghi	42,9
+CHITIET_DONHANG	Số lượng bản ghi khởi tạo ban đầu	1.000
+CHITIET_DONHANG	Tổng dung lượng lưu trữ ban đầu	42.900
+CHITIET_DONHANG	Ước lượng dữ liệu gia tăng mỗi tháng	100
+CHITIET_DONHANG	Dung lượng lưu trữ sau 1 năm	94.380
+TỔNG	Tổng dung lượng ban đầu	1.744.600
+TỔNG	Ước lượng tổng dung lượng sau 1 năm	3.838.120
+
+=== TABLE ===
+	1. Đăng nhập	2. Quản lý đơn hàng	3. Quản lý món	4. Quản lý doanh thu	5. Quản lý nhân viên	6. Quản lý tài khoản	7. Đăng xuất
+Screen Đăng nhập	X						
+Screen Quản lý đơn hàng		X					
+Screen Quản lý món			X				
+Screen Quản lý doanh thu				X			
+Screen Quản lý nhân viên					X		
+Screen Quản lý tài khoản						X	
+Screen Đăng xuất							X
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng “Chào buổi sáng!” | Đăng nhập để vào hệ thống quản lý” ở đầu khung đăng nhập	
+2	Text	Hiển thị cứng nhãn “Tên đăng nhập”	
+3	Input Text	Hiển thị ô trống nhập tên đăng nhập	Bắt buộc nhập 
+4	Text	Hiển thị cứng nhãn “Mật khẩu”	
+5	Input Text	Hiển thị ô trống nhập mật khẩu	Bắt buộc nhập; Ký tự nhập vào hiển thị dạng dấu chấm
+6	Button	Hiển thị cứng “Đăng nhập” | - Sự kiện: khi nhấn vào, hệ thống kiểm tra tính đầy đủ và hợp lệ của thông tin, xác thực tài khoản – mật khẩu, xác định vai trò và hiển thị giao diện phù hợp với quyền hạn của người dùng	Nếu thiếu thông tin / sai thông tin / tài khoản bị khóa thì hiển thị thông báo lỗi tương ứng 
+7	Text	Hiển thị cứng “Bình Yên Là Nhà Coffee & Tea” ở cuối khung đăng nhập	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+3	Input Text	Khi để trống, viền ô “Tên đăng nhập” chuyển sang màu đỏ	Hiển thị sau khi nhấn “Đăng nhập” mà chưa nhập đủ thông tin
+5	Input Text	Khi để trống, viền ô “Mật khẩu” chuyển sang màu đỏ	
+8	Text	Hiển thị thông báo lỗi màu đỏ “Vui lòng nhập đầy đủ thông tin” ngay dưới ô “Tên đăng nhập”, căn lề phải	Sau khi báo lỗi, người dùng nhập lại ở bước nhập thông tin
+9	Text	Hiển thị thông báo lỗi màu đỏ “Vui lòng nhập đầy đủ thông tin” ngay dưới ô “Mật khẩu”, căn lề phải	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+3	Input Text	Hiển thị tên đăng nhập người dùng đã nhập; viền ô chuyển sang màu đỏ	
+5	Input Text	Hiển thị mật khẩu đã nhập dưới dạng dấu chấm; viền ô chuyển sang màu đỏ	
+10	Text	Hiển thị thông báo lỗi “Tên đăng nhập hoặc mật khẩu sai!” ở góc trên bên phải màn hình (thanh viền trái màu đỏ)	Hiển thị khi Tên đăng nhập hoặc Mật khẩu không chính xác
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+3	Input Text	Hiển thị tên đăng nhập người dùng đã nhập; viền ô chuyển sang màu đỏ	
+5	Input Text	Hiển thị mật khẩu đã nhập dưới dạng dấu chấm; viền ô chuyển sang màu đỏ	
+10	Text	Hiển thị thông báo lỗi “Tài khoản này đã bị khóa. Không thể đăng nhập!” ở góc trên bên phải màn hình (thanh viền trái màu đỏ)	Hiển thị khi tài khoản đã bị khóa
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị cứng logo và tên cửa hàng "Bình Yên Là Nhà Coffee & Tea"	
+2	Button	Menu điều hướng chính: Quản lý đơn hàng (đang chọn), Quản lý món, Quản lý doanh thu, Quản lý nhân viên, Quản lý tài khoản | - Sự kiện: nhấn vào mục nào sẽ chuyển sang màn hình quản lý tương ứng	
+3	Button	Hiển thị cứng "Đăng xuất" | - Sự kiện: khi nhấn vào, đăng xuất khỏi hệ thống và quay về màn hình Đăng nhập	 
+4	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý đơn hàng/” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+5	Text	Hiển thị cứng ký hiệu “QL” trong hình tròn và dòng chữ “Đang đăng nhập với vai trò Quản lý.” ở góc trên bên phải	
+6	Text	Hiển thị cứng tiêu đề trang "Quản lý đơn hàng"	
+7	Text	Hiển thị cứng nhãn "Mã đơn"	
+8	Input text	Ô nhập mã đơn hàng cần tìm	
+9	Button	Hiển thị cứng "Tìm kiếm" | - Sự kiện: khi nhấn vào, hệ thống tìm kiếm đơn hàng theo Mã đơn vừa nhập và hiển thị kết quả phù hợp trong bảng 	
+10	Button	Hiển thị cứng "+ Tạo đơn" | - Sự kiện: khi nhấn vào, chuyển sang màn hình Tạo đơn hàng	
+11	Table	Khung "Danh sách đơn hàng" gồm tiêu đề và dòng tiêu đề các cột	
+12	Table column	Cột "Mã đơn": mã đơn hàng tự sinh, dạng DHxxxxxxx	
+13	Table column	Cột "Thời gian tạo": thời điểm đơn hàng được tạo, định dạng hh:mm:ss dd/mm/yyyy	
+14	Table column	Cột "Tổng thanh toán": số tiền khách phải thanh toán sau giảm giá	
+15	Table column	Cột "Phương thức": phương thức thanh toán (Tiền mặt / Chuyển khoản)	
+16	Table column	Cột "Trạng thái": "Đã thanh toán" (chữ xanh) hoặc "Chưa thanh toán" (chữ đỏ)	
+17	Button	Hiển thị cứng "Sửa"  |  Sự kiện: nhấn "Sửa" chuyển sang màn hình Sửa thông tin đơn hàng 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị cứng logo và tên cửa hàng "Bình Yên Là Nhà Coffee & Tea"	
+2	Button	Menu điều hướng chính: Quản lý đơn hàng (đang chọn), Quản lý món, Quản lý doanh thu, Quản lý nhân viên, Quản lý tài khoản | - Sự kiện: nhấn vào mục nào sẽ chuyển sang màn hình quản lý tương ứng	
+3	Button	Hiển thị cứng "Đăng xuất"- Sự kiện: khi nhấn vào, đăng xuất khỏi hệ thống và quay về màn hình Đăng nhập	 
+4	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý đơn hàng/” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+5	Text	Hiển thị cứng ký hiệu “QL” trong hình tròn và dòng chữ “Đang đăng nhập với vai trò Quản lý.” ở góc trên bên phải	
+6	Text	Hiển thị cứng tiêu đề trang "Quản lý đơn hàng"	
+7	Text	Hiển thị cứng nhãn "Mã đơn"	
+8	Input text	Ô nhập mã đơn hàng cần tìm	
+9	Button	Hiển thị cứng "Tìm kiếm" | - Sự kiện: khi nhấn vào, hệ thống tìm kiếm đơn hàng theo Mã đơn vừa nhập và hiển thị kết quả phù hợp trong bảng 	
+10	Button	Hiển thị cứng "+ Tạo đơn" | - Sự kiện: khi nhấn vào, chuyển sang màn hình Tạo đơn hàng	
+11	Table	Khung "Danh sách đơn hàng" gồm tiêu đề và dòng tiêu đề các cột	
+12	Table column	Cột "Mã đơn": mã đơn hàng tự sinh, dạng DHxxxxxxx	
+13	Table column	Cột "Mã nhân viên": mã nhân viên đã tạo/ghi nhận đơn hàng, dạng NVxxx	
+14	Table column	Cột "Tổng tiền": tổng tiền đơn hàng trước khi áp dụng giảm giá	
+15	Table column	Cột "Giảm giá": số tiền được giảm trên đơn hàng (mặc định 0)	
+16	Table column	Cột "Nguồn đơn hàng": nguồn phát sinh đơn hàng (Trực tiếp / GrabFood / ShopeeFood)	
+17	Button	Hiển thị cứng "Sửa"  | - Sự kiện: nhấn "Sửa" chuyển sang màn hình Sửa thông tin đơn hàng 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị cứng logo và tên cửa hàng "Bình Yên Là Nhà Coffee & Tea"	
+2	Button	Menu điều hướng chính: Quản lý đơn hàng (đang chọn), Quản lý món, Quản lý doanh thu, Quản lý nhân viên, Quản lý tài khoản | - Sự kiện: nhấn vào mục nào sẽ chuyển sang màn hình quản lý tương ứng	
+3	Button	Hiển thị cứng "Đăng xuất"- Sự kiện: khi nhấn vào, đăng xuất khỏi hệ thống và quay về màn hình Đăng nhập	 
+4	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý đơn hàng/” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+5	Text	Hiển thị cứng ký hiệu “QL” trong hình tròn và dòng chữ “Đang đăng nhập với vai trò Quản lý.” ở góc trên bên phải	
+6	Text	Hiển thị cứng tiêu đề trang "Quản lý đơn hàng"	
+7	Text	Hiển thị cứng nhãn "Mã đơn"	
+8	Input text	Ô nhập mã đơn hàng cần tìm	
+9	Button	Hiển thị cứng "Tìm kiếm" | - Sự kiện: khi nhấn vào, hệ thống tìm kiếm đơn hàng theo Mã đơn vừa nhập và hiển thị kết quả phù hợp trong bảng 	
+10	Button	Hiển thị cứng "+ Tạo đơn" | - Sự kiện: khi nhấn vào, chuyển sang màn hình Tạo đơn hàng	
+11	Table	Khung "Danh sách đơn hàng" gồm tiêu đề và dòng tiêu đề các cột	
+12	Table column	Cột "Mã đơn": mã đơn hàng tự sinh, dạng DHxxxxxxx	
+13	Table column	Cột "Trạng thái đơn": Hiển thị trạng thái đơn hàng	
+14	Table column	Cột "Ghi chú": Hiển thị ghi chú của đơn hàng	
+15	Button	Hiển thị cứng "Sửa"  | - Sự kiện: nhấn "Sửa" chuyển sang màn hình Sửa thông tin đơn hàng 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị cứng logo và tên cửa hàng "Bình Yên Là Nhà Coffee & Tea"	
+2	Button	Menu điều hướng chính: Quản lý đơn hàng (đang chọn), Quản lý món. | - Sự kiện: nhấn vào mục nào sẽ chuyển sang màn hình quản lý tương ứng	
+3	Button	Hiển thị cứng "Đăng xuất" | - Sự kiện: khi nhấn vào, đăng xuất khỏi hệ thống và quay về màn hình Đăng nhập	 
+4	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý đơn hàng/” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+5	Text	Hiển thị cứng ký hiệu “NV” trong hình tròn và dòng chữ “Đang đăng nhập với vai trò Nhân viên.” ở góc trên bên phải	
+6	Text	Hiển thị cứng tiêu đề trang "Quản lý đơn hàng"	
+7	Text	Hiển thị cứng nhãn "Mã đơn"	
+8	Input text	Ô nhập mã đơn hàng cần tìm	
+9	Button	Hiển thị cứng "Tìm kiếm" | - Sự kiện: khi nhấn vào, hệ thống tìm kiếm đơn hàng theo Mã đơn vừa nhập và hiển thị kết quả phù hợp trong bảng 	
+10	Button	Hiển thị cứng "+ Tạo đơn" | - Sự kiện: khi nhấn vào, chuyển sang màn hình Tạo đơn hàng	
+11	Table	Khung "Danh sách đơn hàng" gồm tiêu đề và dòng tiêu đề các cột	
+12	Table column	Cột "Mã đơn": mã đơn hàng tự sinh, dạng DHxxxxxxx	
+13	Table column	Cột "Thời gian tạo": thời điểm đơn hàng được tạo, định dạng hh:mm:ss dd/mm/yyyy	
+14	Table column	Cột "Tổng thanh toán": số tiền khách phải thanh toán sau giảm giá	
+15	Table column	Cột "Phương thức": phương thức thanh toán (Tiền mặt / Chuyển khoản)	
+16	Table column	Cột "Trạng thái": "Đã thanh toán" (chữ xanh) hoặc "Chưa thanh toán" (chữ đỏ)	
+17	Button	Hiển thị cứng "Sửa"  |  Sự kiện: nhấn "Sửa" chuyển sang màn hình Sửa thông tin đơn hàng 	Nhân viên chỉ có quyền sửa những đơn hàng chưa thanh toán
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị logo của "Bình Yên Là Nhà – Coffee & Tea" như hình trên	
+2	Menu	Hiển thị cứng icon và "Quản lý đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+3	Menu	Hiển thị cứng icon và "Quản lý món" - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+4	Menu	Hiển thị cứng icon và "Quản lý doanh thu"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+5	Menu	Hiển thị cứng icon và "Quản lý nhân viên"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên	
+6	Menu	Hiển thị cứng icon và "Quản lý tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+7	Button	Hiển thị cứng icon và "Đăng xuất" - Sự kiện: khi nhấn vào sẽ hiển thị hộp thoại xác nhận Đăng xuất	
+8	Text	Hiển thị cứng đường dẫn "Quản lý đơn hàng / Tạo đơn hàng" 	Cho biết vị trí hiện tại của người dùng
+9	Icon	Hiển thị icon người dùng với chữ viết tắt "QL" 	Thay đổi theo vai trò tài khoản đăng nhập
+10	Text	Hiển thị "Đang đăng nhập với vai trò Quản lý." 	Thay đổi theo vai trò tài khoản đăng nhập
+11	Text	Hiển thị cứng "Tạo đơn hàng" 	
+12	Text	Hiển thị cứng "Chọn món" 	
+13	Button	Hiển thị mã món "M001", tên món "Cà phê sữa đá" và giá "32.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+14	Button	Hiển thị mã món "M002", tên món "Bạc xỉu" và giá "38.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+15	Button	Hiển thị mã món "M003", tên món "Americano" và giá "35.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+16	Button	Hiển thị mã món "M004", tên món "Trà đào cam sả" và giá "42.000 đ"  | - Sự kiện: không cho phép chọn	Món đang ngừng bán
+17	Label	Hiển thị cứng "Ngừng bán" 	
+18	Button	Hiển thị mã món "M005", tên món "Matcha latte" và giá "45.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+19	Button	Hiển thị mã món "M006", tên món "Cacao đá" và giá "39.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+20	Text	Hiển thị cứng "Đơn hàng mới" 	
+21	Table	Hiển thị cứng "Mã món", "Tên món", "Số lượng", "Giá bán", "Thành tiền" và danh sách món đã chọn | + Chưa có món nào được chọn | - Sự kiện: nhập số lượng của từng món trong cột Số lượng	Thành tiền = Số lượng × Giá bán, tự tính khi nhập số lượng
+22	Text	Hiển thị cứng "Tổng tiền" và tổng tiền của đơn hàng "0 đ" 	
+23	Button	Hiển thị cứng "Nguồn đơn hàng" và 3 nút "Trực tiếp", "GrabFood", "ShopeeFood"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn nguồn đơn hàng đó | + Chỉ chọn một nguồn	
+24	Button	Hiển thị cứng "Phương thức thanh toán" và 2 nút "Tiền mặt", "QR code"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn phương thức thanh toán đó | + Chỉ chọn một phương thức	
+25	Button	Hiển thị cứng "Trạng thái thanh toán" và 2 nút "Chưa thanh toán", "Đã thanh toán"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái thanh toán đó | + Chỉ chọn một trạng thái	
+26	Button	Hiển thị cứng "Lưu"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đơn hàng: | + Thông tin hợp lệ: lưu đơn hàng và hiển thị thông báo "Tạo đơn hàng thành công!" | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	Đơn hàng phải có ít nhất 1 món, số lượng mỗi món là số nguyên lớn hơn 0
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị logo của "Bình Yên Là Nhà – Coffee & Tea" như hình trên	
+2	Menu	Hiển thị cứng icon và "Quản lý đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+3	Menu	Hiển thị cứng icon và "Quản lý món" - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+4	Menu	Hiển thị cứng icon và "Quản lý doanh thu"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+5	Menu	Hiển thị cứng icon và "Quản lý nhân viên"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên	
+6	Menu	Hiển thị cứng icon và "Quản lý tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+7	Button	Hiển thị cứng icon và "Đăng xuất" - Sự kiện: khi nhấn vào sẽ hiển thị hộp thoại xác nhận Đăng xuất	
+8	Text	Hiển thị cứng đường dẫn "Quản lý đơn hàng / Tạo đơn hàng" 	Cho biết vị trí hiện tại của người dùng
+9	Icon	Hiển thị icon người dùng với chữ viết tắt "QL" 	Thay đổi theo vai trò tài khoản đăng nhập
+10	Text	Hiển thị "Đang đăng nhập với vai trò Quản lý." 	Thay đổi theo vai trò tài khoản đăng nhập
+11	Text	Hiển thị cứng "Tạo đơn hàng" 	
+12	Text	Hiển thị cứng "Chọn món" như hình trên	
+13	Text	Hiển thị cứng "Bấm vào món để thêm vào đơn hàng" 	
+14	Button	Hiển thị mã món "M001", tên món "Cà phê sữa đá" và giá "32.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+15	Button	Hiển thị mã món "M002", tên món "Bạc xỉu" và giá "38.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+16	Button	Hiển thị mã món "M003", tên món "Americano" và giá "35.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+17	Button	Hiển thị mã món "M004", tên món "Trà đào cam sả" và giá "42.000 đ" - Sự kiện: không cho phép chọn	Món đang ngừng bán
+18	Label	Hiển thị cứng "Ngừng bán" 	
+19	Button	Hiển thị mã món "M005", tên món "Matcha latte" và giá "45.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+20	Button	Hiển thị mã món "M006", tên món "Cacao đá" và giá "39.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+21	Text	Hiển thị cứng "Đơn hàng mới" 	
+22	Input Text	Hiển thị cứng "Mã đơn hàng" và mã đơn hàng "DH0009"  | - Sự kiện: không cho phép chỉnh sửa	
+23	Table	Hiển thị cứng "Mã món", "Tên món", "Số lượng", "Giá bán", "Thành tiền" và danh sách món đã chọn  | + M001 – Cà phê sữa đá: số lượng 2, giá bán 32.000, thành tiền 64.000 | + M005 – Matcha latte: số lượng 1, giá bán 45.000, thành tiền 45.000 | - Sự kiện: nhập số lượng của từng món trong cột Số lượng	Thành tiền = Số lượng × Giá bán, tự tính khi nhập số lượng
+24	Text	Hiển thị cứng "Tổng tiền" và tổng tiền của đơn hàng "109.000 đ" 	Tự tính bằng tổng thành tiền các món
+25	Button	Hiển thị cứng "Nguồn đơn hàng" và 3 nút "Trực tiếp", "GrabFood", "ShopeeFood"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn nguồn đơn hàng đó | + Chỉ chọn một nguồn	
+26	Button	Hiển thị cứng "Phương thức thanh toán" và 2 nút "Tiền mặt", "QR code"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn phương thức thanh toán đó | + Chỉ chọn một phương thức	
+27	Button	Hiển thị cứng "Trạng thái thanh toán" và 2 nút "Chưa thanh toán", "Đã thanh toán"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái thanh toán đó | + Chỉ chọn một trạng thái	
+28	Button	Hiển thị cứng "Lưu"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đơn hàng: | + Thông tin hợp lệ: lưu đơn hàng và hiển thị thông báo "Tạo đơn hàng thành công!" | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	Đã nhấn để lưu đơn hàng. Đơn hàng phải có ít nhất 1 món, số lượng mỗi món là số nguyên lớn hơn 0
+29	Box	Hiển thị thông báo "Tạo đơn hàng thành công!" 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị logo của "Bình Yên Là Nhà – Coffee & Tea" như hình trên	
+2	Menu	Hiển thị cứng icon và "Quản lý đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+3	Menu	Hiển thị cứng icon và "Quản lý món"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+4	Menu	Hiển thị cứng icon và "Quản lý doanh thu"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+5	Menu	Hiển thị cứng icon và "Quản lý nhân viên"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên	
+6	Menu	Hiển thị cứng icon và "Quản lý tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+7	Button	Hiển thị cứng icon và "Đăng xuất"  | - Sự kiện: khi nhấn vào sẽ hiển thị hộp thoại xác nhận Đăng xuất	
+8	Text	Hiển thị cứng đường dẫn "Quản lý đơn hàng / Tạo đơn hàng	Cho biết vị trí hiện tại của người dùng
+9	Icon	Hiển thị icon người dùng với chữ viết tắt "QL" 	Thay đổi theo vai trò tài khoản đăng nhập
+10	Text	Hiển thị "Đang đăng nhập với vai trò Quản lý." 	Thay đổi theo vai trò tài khoản đăng nhập
+11	Text	Hiển thị cứng "Chọn món" 	
+12	Text	Hiển thị cứng "Bấm vào món để thêm vào đơn hàng" 	
+13	Button	Hiển thị mã món "M001", tên món "Cà phê sữa đá" và giá "32.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+14	Button	Hiển thị mã món "M002", tên món "Bạc xỉu" và giá "38.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+15	Button	Hiển thị mã món "M003", tên món "Americano" và giá "35.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+16	Button	Hiển thị mã món "M004", tên món "Trà đào cam sả" và giá "42.000 đ"  | - Sự kiện: không cho phép chọn	Món đang ngừng bán
+17	Label	Hiển thị cứng "Ngừng bán" 	
+18	Button	Hiển thị mã món "M005", tên món "Matcha latte" và giá "45.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+19	Button	Hiển thị mã món "M006", tên món "Cacao đá" và giá "39.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+20	Text	Hiển thị cứng "Đơn hàng mới" 	
+21	Input Text	Hiển thị cứng "Mã đơn hàng" và mã đơn hàng "DH0009"  | - Sự kiện: không cho phép chỉnh sửa	
+22	Table	Hiển thị cứng "Mã món", "Tên món", "Số lượng", "Giá bán", "Thành tiền" và danh sách món đã chọn  | + M001 – Cà phê sữa đá: số lượng 2, giá bán 32.000, thành tiền 64.000 | + M005 – Matcha latte: chưa nhập số lượng, giá bán 45.000, thành tiền "—" | - Sự kiện: nhập số lượng của từng món trong cột Số lượng	Thành tiền = Số lượng × Giá bán, tự tính khi nhập số lượng
+23	Input Text	Hiển thị ô nhập số lượng của món "M005 – Matcha latte" trống, gợi ý "Nhập số lượng"  | - Sự kiện: nhập số lượng món | + Bắt buộc nhập | + Là số nguyên lớn hơn 0	- Placeholder: Nhập số lượng. Ô viền đỏ do số lượng không hợp lệ. Nếu bỏ trống thì thông báo "Vui lòng nhập số lượng!". Nếu không phải số nguyên lớn hơn 0 thì thông báo "Số lượng phải là số nguyên lớn hơn 0!"
+24	Text	Hiển thị cứng "Vui lòng nhập số lượng!" 	
+25	Text	Hiển thị cứng "Tổng tiền" và tổng tiền của đơn hàng "64.000 đ" 	
+26	Button	Hiển thị cứng "Nguồn đơn hàng" và 3 nút "Trực tiếp", "GrabFood", "ShopeeFood"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn nguồn đơn hàng đó | + Chỉ chọn một nguồn	
+27	Button	Hiển thị cứng "Phương thức thanh toán" và 2 nút "Tiền mặt", "QR code"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn phương thức thanh toán đó | + Chỉ chọn một phương thức	
+28	Button	Hiển thị cứng "Trạng thái thanh toán" và 2 nút "Chưa thanh toán", "Đã thanh toán"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái thanh toán đó | + Chỉ chọn một trạng thái	
+29	Button	Hiển thị cứng "Lưu"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đơn hàng: | + Thông tin hợp lệ: lưu đơn hàng và hiển thị thông báo "Tạo đơn hàng thành công!" | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	Đơn hàng phải có ít nhất 1 món, số lượng mỗi món là số nguyên lớn hơn 0
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị logo của "Bình Yên Là Nhà – Coffee & Tea" như hình trên	
+2	Menu	Hiển thị cứng icon và "Quản lý đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+3	Menu	Hiển thị cứng icon và "Quản lý món"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+4	Menu	Hiển thị cứng icon và "Quản lý doanh thu"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+5	Menu	Hiển thị cứng icon và "Quản lý nhân viên"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên	
+6	Menu	Hiển thị cứng icon và "Quản lý tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+7	Button	Hiển thị cứng icon và "Đăng xuất"  | - Sự kiện: khi nhấn vào sẽ hiển thị hộp thoại xác nhận Đăng xuất	
+8	Text	Hiển thị cứng đường dẫn "Quản lý đơn hàng / Tạo đơn hàng" 	Cho biết vị trí hiện tại của người dùng
+9	Icon	Hiển thị icon người dùng với chữ viết tắt "QL" 	Thay đổi theo vai trò tài khoản đăng nhập
+10	Text	Hiển thị "Đang đăng nhập với vai trò Quản lý." 	Thay đổi theo vai trò tài khoản đăng nhập
+11	Text	Hiển thị cứng "Quản lý đơn hàng" 	
+12	Button	Hiển thị cứng icon "+" và "Tạo đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Tạo đơn hàng	
+13	Button	Hiển thị cứng "Sửa thông tin đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Sửa thông tin đơn hàng	
+14	Button	Hiển thị cứng icon kính lúp và "Tra cứu đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Tra cứu đơn hàng	
+15	Text	Hiển thị cứng "Chọn món" 	
+16	Text	Hiển thị cứng "Bấm vào món để thêm vào đơn hàng" 	
+17	Button	Hiển thị mã món "M001", tên món "Cà phê sữa đá" và giá "32.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+18	Button	Hiển thị mã món "M002", tên món "Bạc xỉu" và giá "38.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+19	Button	Hiển thị mã món "M003", tên món "Americano" và giá "35.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+20	Button	Hiển thị mã món "M004", tên món "Trà đào cam sả" và giá "42.000 đ" - Sự kiện: không cho phép chọn	
+21	Label	Hiển thị cứng "Ngừng bán" 	
+22	Button	Hiển thị mã món "M005", tên món "Matcha latte" và giá "45.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+23	Button	Hiển thị mã món "M006", tên món "Cacao đá" và giá "39.000 đ"  | - Sự kiện: khi nhấn vào sẽ thêm món vào đơn hàng; nhấn lần nữa sẽ bỏ món khỏi đơn hàng	
+24	Text	Hiển thị cứng "Đơn hàng mới" 	
+25	Input Text	Hiển thị cứng "Mã đơn hàng" và mã đơn hàng "DH0009"  | - Sự kiện: không cho phép chỉnh sửa	
+26	Table	Hiển thị cứng "Mã món", "Tên món", "Số lượng", "Giá bán", "Thành tiền" và danh sách món đã chọn  | + M001 – Cà phê sữa đá: số lượng 2, giá bán 32.000, thành tiền 64.000 | + M005 – Matcha latte: số lượng "-1", giá bán 45.000, thành tiền "—" | - Sự kiện: nhập số lượng của từng món trong cột Số lượng	Thành tiền = Số lượng × Giá bán, tự tính khi nhập số lượng
+27	Input Text	Hiển thị ô nhập số lượng của món "M005 – Matcha latte" có giá trị "-1"  | - Sự kiện: nhập số lượng món | + Bắt buộc nhập | + Là số nguyên lớn hơn 0	
+28	Text	Hiển thị cứng "Số lượng phải là số nguyên lớn hơn 0!" 	
+29	Text	Hiển thị cứng "Tổng tiền" và tổng tiền của đơn hàng "64.000 đ" 	
+30	Button	Hiển thị cứng "Nguồn đơn hàng" và 3 nút "Trực tiếp", "GrabFood", "ShopeeFood"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn nguồn đơn hàng đó | + Chỉ chọn một nguồn	
+31	Button	Hiển thị cứng "Phương thức thanh toán" và 2 nút "Tiền mặt", "QR code" như hình trên | - Sự kiện: khi nhấn vào nút nào sẽ chọn phương thức thanh toán đó | + Chỉ chọn một phương thức	
+32	Button	Hiển thị cứng "Trạng thái thanh toán" và 2 nút "Chưa thanh toán", "Đã thanh toán"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái thanh toán đó | + Chỉ chọn một trạng thái	
+33	Button	Hiển thị cứng "Lưu"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đơn hàng: | + Thông tin hợp lệ: lưu đơn hàng và hiển thị thông báo "Tạo đơn hàng thành công!" | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	Đơn hàng phải có ít nhất 1 món, số lượng mỗi món là số nguyên lớn hơn 0
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị cứng: tên thương hiệu cửa hàng “BÌNH YÊN LÀ NHÀ / COFFEE & TEA”.	Văn bản cố định.
+2	Text	Hiển thị cứng” Quản lý đơn hàng.” | Điều hướng đến trang Quản lý đơn hàng. | Sự kiện: Nhấn vào đẫn đến trang Quản lý đơn hàng	Kèm icon bên trái.
+3	Text	Hiển thị cứng ”Quản lý món” | Điều hướng đến trang Quản lý món. | Sự kiện: Nhấn vào đẫn đến trang Quản lý món	Kèm icon bên trái.
+4	Text	Hiển thị cứng “ Quản lý doanh thu.” | Điều hướng đến trang Quản lý doanh thu. | Sự kiện: Nhấn vào đẫn đến trang Quản lý doanh thu	Kèm icon bên trái.
+5	Text	Hiển thị cứng “Quản lý nhân viên.” | Điều hướng đến trang Quản lý nhân viên. | Sự kiện: Nhấn vào đẫn đến trang Quản lý nhân viên	Kèm icon bên trái.
+6	Text	Hiển thị cứng “Quản lý tài khoản.” | Điều hướng đến trang Quản lý tài khoản. | Sự kiện: Nhấn vào đẫn đến trang Quản lý tài khoản	Kèm icon bên trái.
+7	Text	Hiển thị cứng: “Đăng xuất” | Cho phép người dùng đăng xuất khỏi hệ thống. | Sự kiện: Nhấn vào đẫn đến đăng xuất tài khoản	Kết thúc phiên đăng nhập.
+8	Icon	Minh họa chức năng đăng xuất, nằm cạnh mục 7.	
+9	Text	Hiển thị đường dẫn điều hướng hiện tại: “Quản lý món /”.	Breadcrumb.
+10	Icon	Biểu tượng đại diện cho tài khoản Quản lý (“QL”).	Không phải ảnh đại diện cá nhân.
+11	Output text	Hiển thị trạng thái đăng nhập và vai trò: “Đang đăng nhập với vai trò Quản lý.”	Dữ liệu theo tài khoản đăng nhập.
+12	Text	Tiêu đề chức năng hiện tại: “Quản lý món”.	Tiêu đề màn hình.
+13	Input text	Hiển thị ô trống nhập tên món	
+14	Text	Chú thích nơi nhập tên món	
+15	Button	Tìm kiếm món theo tên đã nhập. | Sự kiện: Nhấn vào sẽ ra món cần tìm (đã nhập)	Nhãn “Tìm kiếm”.
+16	Button	Chuyển sang giao diện thêm món mới.	Nhãn “+ Thêm món”.
+17	Table	Hiển thị danh sách các món hiện có trong hệ thống.	Gồm hàng tiêu đề MÃ MÓN, TÊN MÓN, GIÁ BÁN, TRẠNG THÁI, THAO TÁC, theo thứ tự từ trái sang phải.
+18	Text	Nhãn cho trường tìm kiếm: “Tên món”.	Văn bản cố định.
+19	Table Header	Hiển thị cứng: MÃ MÓN, TÊN MÓN, GIÁ BÁN, TRẠNG THÁI, THAO TÁC. | Xác định tên của từng cột: MÃ MÓN, TÊN MÓN, GIÁ BÁN, TRẠNG THÁI, THAO TÁC.	Theo thứ tự từ trái sang phải.
+20	Text	Hiển thị cứng: | Tiêu đề khu vực chứa danh sách món: “Danh sách món”.	Văn bản cố định.
+21	Table Row	Đại diện cho một bản ghi món trong bảng (dòng M001).	Các dòng M002–M006 cùng cấu trúc, không khoanh lại.
+22	Table Cell	Hiển thị: trạng thái “Đang bán” của món.	Nhãn màu xanh.
+23	Button	Sửa và Xóa món ở dòng tương ứng, trong cột THAO TÁC.	Dòng M006 là ví dụ. Các dòng khác cùng kiểu.
+24	Table Cell	Hiển thị trạng thái “Ngừng bán” của món.	Nhãn màu đỏ.
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị tên thương hiệu cửa hàng “BÌNH YÊN LÀ NHÀ / COFFEE & TEA”.	Văn bản cố định.
+2	Text	Hiển thị cứng ”Quản lý đơn hàng.” | Điều hướng đến trang Quản lý đơn hàng.	Kèm icon bên trái. Menu của Nhân viên chỉ có mục này và Quản lý món.
+3	Text	Hiển thị cứng ”Quản lý món” | Điều hướng đến trang Quản lý món.	Kèm icon bên trái.
+4	Text	Cho phép người dùng đăng xuất khỏi hệ thống.	Kết thúc phiên đăng nhập.
+5	Text	Hiển thị đường dẫn điều hướng hiện tại: “Quản lý món /”.	Breadcrumb.
+6	Icon	Biểu tượng đại diện cho tài khoản Nhân viên (“NV”).	Không phải ảnh đại diện cá nhân.
+7	Output text	Hiển thị trạng thái đăng nhập và vai trò: “Đang đăng nhập với vai trò Nhân viên.”	Dữ liệu theo tài khoản đăng nhập.
+8	Text	Tiêu đề chức năng hiện tại: “Quản lý món”.	Tiêu đề màn hình.
+9	Text	Nhãn cho trường tìm kiếm: “Tên món”.	Văn bản cố định.
+10	text	Chú thích nơi nhập tên món	
+11	Input text	Cho phép nhập tên món cần tìm.	Placeholder “Nhập tên món cần tìm”. Có thể để trống.
+12	Button	Tìm kiếm món theo tên đã nhập.	Nhãn “Tìm kiếm”. | Sự kiện: Nhấn để lọc danh sách món theo tên. Để trống thì hiển thị toàn bộ món.
+13	Text	Tiêu đề khu vực chứa danh sách món: “Danh sách món”.	Văn bản cố định.
+14	Table Header	Tên cột: MÃ MÓN, TÊN MÓN, GIÁ BÁN, TRẠNG THÁI.	Không có cột THAO TÁC so với màn Quản lý.
+15	Table Row	Đại diện cho một bản ghi món trong bảng.	Các dòng khác có cùng cấu trúc.
+16	Table Cell	Hiển thị trạng thái “Đang bán” của món.	Nhãn màu xanh.
+17	Table Cell	Hiển thị trạng thái “Ngừng bán” của món.	Nhãn màu đỏ.
+18	Table	Hiển thị danh sách các món hiện có trong hệ thống.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+3	Text	Hiển thị cứng “Quản lý món”	
+4	Text	Hiển thị vai trò của người dùng 	
+5	Button	Hiển thị cứng “Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Hiển thị ô trống nhập tên món	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Hủy” | Sự kiện: Khi nhấn vào sẽ điều hướng về màn hình Quản lý món ban đầu	
+13	Button	Hiển thị cứng “Lưu” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo	
+14	Button	Hiển thị cứng”Sửa” | Sự kiện: Khi nhấn vào sẽ hiển thị các trường thông tin có thể chỉnh sửa	
+15	Input Text	Hiển thị như hình trên | Trường: TÊN MÓN	Để trống sẽ báo lỗi
+16	Input Text	Hiển thị như hình trên | Trường: GIÁ BÁN	Để trống trường “Giá bán”, hệ thống hiển thị thông báo “Vui lòng nhập giá bán!” ngay dưới trường “Giá bán”. | Nhập giá bán không phải là số hoặc giá bán nhỏ hơn hoặc bằng 0, hệ thống hiển thị thông báo “Giá bán phải là số lớn hơn 0!” ngay dưới trường “GIÁ BÁN”.
+17	Select Input	Chọn TRẠNG THÁI có sẵn	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý món”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Hiển thị ô trống nhập tên món	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Thêm món” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Thêm món.	
+13	Text	Hiển thị  thông báo “Cập nhật thông tin món thành công!”	
+14	Table	Hiển thị cứng “MÃ MÓN”,”TÊN MÓN”,”GIÁ BÁN”,”TRẠNG THÁI”,”THAO TÁC”. | Sự kiện; Hiển thị thông tin chi tiết những món trong danh sách món sau khi cập nhật thành công món đã chọn. 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý món”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Nhập thông tin tìm kiếm	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Thêm món” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Thêm món.	
+13	Output Text	Hiển thị thông tin sau khi tìm kiếm	
+14	Text	Hiển thị cứng đường dẫn “Quản lý món/Tìm kiếm món”như hình trên	Cho biết vị trí hiện tại của người dùng
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý món”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Nhập thông tin tìm kiếm	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Thêm món” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Thêm món.	
+13	Text	 Hiển thị thông báo “Không tìm thấy món!”.  	
+14	Text	Hiển thị cứng đường dẫn “Quản lý món/Tìm kiếm món”như hình trên	Cho biết vị trí hiện tại của người dùng
+15	Box	Hiển thị cứng “MÃ MÓN”,”TÊN MÓN”,”GIÁ BÁN”,”TRẠNG THÁI”,”THAO TÁC”. | Sự kiện; Không hiển thị thông tin chi tiết những món trong hóa đơn khi không tìm thấy món. 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị icon thông báo như hình	
+2	Text	Hiển thị thông báo xác nhận “Bạn có chắc chắn muốn xóa món này không?”	
+3	Button	Hiển thị nút “Hủy” | Sự kiện: khi nhấn nút sẽ quay về màn hình Quản lý món ban đầu	
+4	Button	Hiển thị cứng “Chuyển trạng thái ngừng bán” | Sự kiện: Khi nhấn nút sẽ điều hướng sang màn hình Chuyển trạng thái ngừng bán	
+5	Button	Hiển thị cứng “Xác nhận” | Sự kiện : Khi nhấn vào sẽ điều hướng sang màn hình xóa món thành công	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý món”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Hiển thị ô trống nhập tên món	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Thêm món” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Thêm món.	
+13	Text	Hiển thị thông báo “Xóa món thành công!”	
+14	Box	Hiển thị cứng “MÃ MÓN”,”TÊN MÓN”,”GIÁ BÁN”,”TRẠNG THÁI”,”THAO TÁC”. | Sự kiện; Hiển thị thông tin chi tiết những món trong danh dách món sau khi xóa món thành công. 	
+15	Text	Hiển thị cứng đường dẫn “Quản lý món/”như hình trên	Cho biết vị trí hiện tại của người dùng
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý món”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Hiển thị ô trống nhập tên món	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Thêm món” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Thêm món.	
+13	Text	Hiển thị  thông báo  “Đã chuyển trạng thái của món thành Ngừng bán”.”	
+14	Box	Hiển thị cứng “MÃ MÓN”,”TÊN MÓN”,”GIÁ BÁN”,”TRẠNG THÁI”,”THAO TÁC”. | Sự kiện: Hiển thị thông tin chi tiết những món trong hóa đơn  và hiển thị trạng thái ngừng bán cho món đã chọn trước đó	
+15	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/Xóa món”như hình trên	Cho biết vị trí hiện tại của người dùng
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Button	Mũi tên “<" chuyển về tháng trước | - Sự kiện: khi nhấn vào, lịch hiển thị lùi lại 1 tháng | 	
+2	Dropdown	Chọn nhanh "Tháng" hiển thị trên lịch | 	
+3	Dropdown	Chọn nhanh "Năm" hiển thị trên lịch | 	 
+4	Button	Mũi tên "›" chuyển sang tháng sau | - Sự kiện: khi nhấn vào, lịch hiển thị tiến tới 1 tháng | 	
+5	Table	Lưới các ngày trong tháng đang hiển thị (thứ Hai đến Chủ nhật) | - Sự kiện: khi nhấn chọn một ngày, hệ thống gán giá trị vào ô Ngày bắt đầu (13) hoặc Ngày kết thúc (14) tương ứng (tùy ô vừa được mở lịch) và đóng khung lịch	Cho biết vị trí hiện tại của người dùng
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị cứng logo và tên cửa hàng "Bình Yên Là Nhà Coffee & Tea"	
+2	Button	Menu điều hướng chính: Quản lý đơn hàng, Quản lý món, Quản lý doanh thu (đang chọn), Quản lý nhân viên, Quản lý tài khoản | - Sự kiện: nhấn vào mục nào sẽ chuyển sang màn hình quản lý tương ứng	
+3	Button	Menu con của "Quản lý doanh thu": Báo cáo doanh thu (đang chọn), So sánh doanh thu | - Sự kiện: nhấn "So sánh doanh thu" chuyển sang Màn hình so sánh dữ liệu doanh thu	 
+4	Button	Hiển thị cứng "Đăng xuất" | - Sự kiện: khi nhấn vào, đăng xuất khỏi hệ thống và quay về màn hình Đăng nhập | 	
+5	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý doanh thu /Báo cáo doanh thu” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+6	Text	Hiển thị cứng ký hiệu “QL” trong hình tròn và dòng chữ “Đang đăng nhập với vai trò Quản lý.” ở góc trên bên phải	
+7	Text	Hiển thị cứng tiêu đề trang "Báo cáo doanh thu"	
+8	Text	Hiển thị cứng tiêu đề khung "Khoảng thời gian"	
+9	Button	Hiển thị cứng "Ngày" | - Sự kiện: khi nhấn vào, chọn chế độ xem báo cáo theo từng ngày	
+10	Button	Hiển thị cứng "Tuần" | - Sự kiện: khi nhấn vào, chọn chế độ xem báo cáo theo tuần	
+11	Button	Hiển thị cứng "Tháng" | - Sự kiện: khi nhấn vào, chọn chế độ xem báo cáo theo tháng	
+12	Button	Hiển thị cứng "Năm" | - Sự kiện: khi nhấn vào, chọn chế độ xem báo cáo theo năm	
+13	Input date	Ô Ngày bắt đầu hiển thị giá trị người dùng vừa chọn	27/10/2026
+14	Input date	Ô Ngày kết thúc hiển thị giá trị người dùng vừa chọn, nhỏ hơn Ngày bắt đầu	12/10/2026
+15	Button	Hiển thị cứng "Xem báo cáo" | - Sự kiện: khi nhấn vào, hệ thống kiểm tra Ngày bắt đầu (13) và Ngày kết thúc (14): |   • Ngày bắt đầu lớn hơn Ngày kết thúc → hiển thị Màn hình 4.2 |   • Hợp lệ → hiển thị kết quả báo cáo, xem Màn hình 4.3	 |  |  | 
+16	Text	Hiển thị thông báo nổi ở góc trên bên phải màn hình dòng chữ "Ngày bắt đầu không được lớn hơn ngày kết thúc!" kèm vạch đỏ cảnh báo	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Card	Hiển thị cứng tiêu đề "Tổng doanh thu" và giá trị tổng doanh thu trong khoảng thời gian đã chọn 	Tổng doanh thu =(3) + (4)
+2	Card	Hiển thị cứng tiêu đề "Số đơn hàng" và tổng số đơn hàng trong khoảng thời gian đã chọn	
+3	Card	Hiển thị cứng tiêu đề "Tiền mặt" và tổng doanh thu thanh toán bằng tiền mặt 	 
+4	Card	Hiển thị cứng tiêu đề "Chuyển khoản" và tổng doanh thu thanh toán bằng chuyển khoản	
+5	Chart	Khung "Biểu đồ doanh thu": biểu đồ cột thể hiện doanh thu theo từng mốc thời gian trong khoảng thời gian đã chọn	Cột có giá trị cao nhất được tô đậm màu nâu để làm nổi bật
+6	List	Khung "Món bán chạy": danh sách tối đa 5 món bán chạy nhất trong khoảng thời gian đã chọn, kèm số lượng đã bán (đơn vị "ly"), sắp xếp giảm dần theo số lượng	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý doanh thu /So sánh dữ liệu doanh thu” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+2	Text	Hiển thị cứng tiêu đề trang "So sánh dữ liệu doanh thu"	
+3	Text	Hiển thị cứng tiêu đề khung "Thiết lập khoảng thời gian"	
+4	Input date	Ô "Kỳ 1 · Từ ngày": chọn ngày bắt đầu của kỳ thứ nhất	
+5	Input date	Ô "Đến ngày": chọn ngày kết thúc của kỳ thứ nhất	 
+6	Input date	Ô "Kỳ 2 · Từ ngày": chọn ngày bắt đầu của kỳ thứ hai	
+7	Input date	Ô "Đến ngày": chọn ngày kết thúc của kỳ thứ hai	Cột có giá trị cao nhất được tô đậm màu nâu để làm nổi bật
+8	Button	Hiển thị cứng "So sánh" | - Sự kiện: khi nhấn vào, hệ thống kiểm tra 4 mốc thời gian (3)-(6): |   • Hợp lệ → tính toán và hiển thị kết quả so sánh, xem Màn hình 4.4.1	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Chart	Khung "Đối chiếu doanh thu": biểu đồ thanh ngang so sánh tổng doanh thu giữa Kỳ 1 và Kỳ 2, mỗi kỳ tương ứng một thanh kèm nhãn tên mốc thời gian	
+2	Card	Hiển thị cứng tiêu đề "Kỳ 1 · Tháng 9" và tổng doanh thu của Kỳ 1	Nhãn kỳ lấy theo khoảng thời gian đã chọn
+3	Card	Hiển thị cứng tiêu đề "Kỳ 2 · Tháng 10" và tổng doanh thu của Kỳ 2	Nhãn kỳ lấy theo khoảng thời gian đã chọn
+4	Card	Hiển thị cứng tiêu đề "Chênh lệch" và số tiền chênh lệch doanh thu giữa Kỳ 2 và Kỳ 1	 Chữ màu xanh nếu Kỳ 2 cao hơn Kỳ 1 (tăng), màu đỏ nếu thấp hơn (giảm)
+5	Card	Hiển thị cứng tiêu đề "Tăng trưởng" và phần trăm tăng trưởng doanh thu giữa 2 kỳ	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng chữ “BÌNH YÊN LÀ NHÀ” và dòng “COFFEE & TEA” ở góc trên bên trái thanh điều hướng như hình	
+2	Button	Hiển thị cứng các mục menu chính, mỗi mục kèm biểu tượng: “Quản lý đơn hàng”, “Quản lý món”, “Quản lý doanh thu”, “Quản lý nhân viên”, “Quản lý tài khoản” | - Sự kiện: khi nhấn vào một mục sẽ chuyển đến chức năng tương ứng	
+3	Button	Hiển thị cứng 2 mục con của “Quản lý nhân viên”: “Quản lý thông tin nhân viên” và “Quản lý ca làm” | - Sự kiện: nhấn “Quản lý thông tin nhân viên” hiển thị màn hình Quản lý thông tin nhân viên; nhấn “Quản lý ca làm” chuyển đến chức năng Quản lý ca làm	 
+4	Button	Hiển thị cứng biểu tượng và chữ “Đăng xuất” ở cuối thanh điều hướng | - Sự kiện: khi nhấn vào sẽ thực hiện chức năng Đăng xuất	
+5	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý nhân viên / Quản lý thông tin nhân viên” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+6	Text	Hiển thị cứng ký hiệu “QL” trong hình tròn và dòng chữ “Đang đăng nhập với vai trò Quản lý.” ở góc trên bên phải	
+7	Text	Hiển thị cứng tiêu đề “Quản lý thông tin nhân viên”	Tiêu đề trang
+8	Button	Hiển thị cứng nút “+ Thêm nhân viên” (nền nâu đậm) ở phía trên bảng | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Thêm nhân viên mới	
+9	Text	Hiển thị cứng tiêu đề bảng “Danh sách nhân viên” và dòng tiêu đề cột: “MÃ NV”, “TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”, “ĐỊA CHỈ”, “NGÀY VÀO LÀM”, “TRẠNG THÁI”, “THAO TÁC”	
+10	Text	Hiển thị mã nhân viên của từng dòng, ví dụ “NV001”, “NV002”…	
+11	Text	Hiển thị tên nhân viên của từng dòng	
+12	Text	Hiển thị số điện thoại của từng dòng	
+13	Text	Hiển thị địa chỉ của từng dòng	
+14	Text	Hiển thị ngày vào làm của từng dòng theo định dạng dd/mm/yyyy	
+15	Tag	Hiển thị trạng thái của nhân viên: “Còn làm” (nền xanh lá nhạt, chữ xanh lá) hoặc “Nghỉ làm” (nền đỏ nhạt, chữ đỏ)	
+16	Button	Hiển thị cứng “Sửa” ở cột THAO TÁC của từng dòng | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Sửa thông tin nhân viên, dòng được chọn chuyển sang chế độ chỉnh sửa	
+17	Button	Hiển thị cứng “Xóa” ở cột THAO TÁC của từng dòng | - Sự kiện: khi nhấn vào sẽ hiển thị hộp thoại xác nhận xóa nhân viên của dòng được chọn	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng chữ “BÌNH YÊN LÀ NHÀ” và dòng “COFFEE & TEA” ở góc trên bên trái thanh điều hướng như hình	
+2	Button	Hiển thị cứng các mục menu chính, mỗi mục kèm biểu tượng: “Quản lý đơn hàng”, “Quản lý món”, “Quản lý doanh thu”, “Quản lý nhân viên”, “Quản lý tài khoản” | - Sự kiện: khi nhấn vào một mục sẽ chuyển đến chức năng tương ứng	Mục “Quản lý nhân viên” đang được chọn (nền nổi bật)
+3	Button	Hiển thị cứng 2 mục con của “Quản lý nhân viên”: “Quản lý thông tin nhân viên” và “Quản lý ca làm” | - Sự kiện: nhấn “Quản lý thông tin nhân viên” hiển thị màn hình Quản lý thông tin nhân viên; nhấn “Quản lý ca làm” chuyển đến chức năng Quản lý ca làm	Mục “Quản lý thông tin nhân viên” đang được chọn (chữ đậm)
+4	Button	Hiển thị cứng biểu tượng và chữ “Đăng xuất” ở cuối thanh điều hướng | - Sự kiện: khi nhấn vào sẽ chuyển sang màn hình Đăng xuất	
+5	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý nhân viên / Quản lý thông tin nhân viên / Thêm nhân viên mới” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+6	Text	Hiển thị cứng ký hiệu “QL” trong hình tròn và dòng chữ “Đang đăng nhập với vai trò Quản lý.” ở góc trên bên phải	
+7	Text	Hiển thị cứng tiêu đề “Quản lý thông tin nhân viên”	Tiêu đề trang
+8	Button	Hiển thị cứng nút “Hủy” (nền trắng, viền mảnh) | - Sự kiện: khi nhấn vào sẽ hủy việc thêm nhân viên mới, không lưu thông tin đang nhập	
+9	Button	Hiển thị cứng nút “Lưu” (nền nâu đậm) | - Sự kiện: khi nhấn vào, hệ thống kiểm tra tính hợp lệ của thông tin nhân viên và lưu vào hệ thống	
+10	Text	Hiển thị cứng tiêu đề bảng “Danh sách nhân viên” và dòng tiêu đề cột “MÃ NV”, “TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”, “ĐỊA CHỈ”, “NGÀY VÀO LÀM”, “TRẠNG THÁI”, “THAO TÁC”	
+11	Table	Hiển thị danh sách nhân viên hiện có (mỗi dòng gồm mã, tên, số điện thoại, địa chỉ, ngày vào làm, trạng thái, thao tác “Sửa · Xóa”) 	Thêm dòng nhập liệu mới ở cuối danh sách
+12	Text	Hiển thị mã nhân viên của dòng nhập liệu mới 	Mã tiếp nối mã nhân viên cuối cùng trong danh sách
+13	Input Text	Hiển thị ô trống nhập “Tên nhân viên”	Bắt buộc nhập; Tối đa 100 ký tự
+14	Input Text	Hiển thị ô trống nhập “Số điện thoại”	Bắt buộc nhập; Tối đa 10 ký tự số; Không được trùng số điện thoại của nhân viên đã có
+15	Input Text	Hiển thị ô trống nhập địa chỉ	Tối đa 200 ký tự 
+16	Input Text	Hiển thị ô trống nhập ngày vào làm	dd/mm/yyyy
+17	Dropdown	Hiển thị danh sách chọn “Trạng thái” với giá trị mặc định “Còn làm”	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Table	Nhân viên vừa thêm xuất hiện trong danh sách 	Dữ liệu trong hình là minh họa
+2	Text	Dòng nhập liệu mới được hiển thị lại ở cuối danh sách với mã nhân viên kế tiếp (ví dụ “NV008”)	
+3	Input Text	Hiển thị ô trống nhập “Tên nhân viên” | - Sự kiện: người dùng nhập tên nhân viên	Bắt buộc nhập; Tối đa 100 ký tự 
+4	Input Text	Hiển thị ô trống nhập “Số điện thoại” | - Sự kiện: người dùng nhập số điện thoại	Bắt buộc nhập; Tối đa 10 ký tự số; Không được trùng số điện thoại của nhân viên đã có
+5	Input Text	Hiển thị ô trống nhập địa chỉ | - Sự kiện: người dùng nhập địa chỉ	Tối đa 200 ký tự
+6	Input Text	Hiển thị ô trống nhập ngày vào làm | - Sự kiện: người dùng nhập ngày vào làm	dd/mm/yyyy
+7	Dropdown	Hiển thị danh sách chọn “Trạng thái” với giá trị mặc định “Còn làm” | - Sự kiện: người dùng chọn một trong hai giá trị “Còn làm” hoặc “Nghỉ làm”	
+8	Text	Hiển thị thông báo “Thêm nhân viên thành công!” ở góc trên bên phải màn hình (thanh viền trái màu xanh lá)	Hiển thị sau khi hệ thống lưu thông tin nhân viên thành công
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Input Text	Khi để trống, ô “Tên nhân viên” hiển thị viền đỏ và nền đỏ nhạt	
+2	Input Text	Khi để trống, ô “Số điện thoại” hiển thị viền đỏ và nền đỏ nhạt	
+3	Text	Hiển thị thông báo lỗi màu đỏ “Vui lòng nhập đầy đủ thông tin!” ngay dưới ô “Tên nhân viên”	Hiển thị khi nhấn “Lưu” mà bỏ trống “Tên nhân viên”
+4	Text	Hiển thị thông báo lỗi màu đỏ “Vui lòng nhập đầy đủ thông tin!” ngay dưới ô “Số điện thoại”	Hiển thị khi nhấn “Lưu” mà bỏ trống “Số điện thoại”
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Input Text	Hiển thị số điện thoại người dùng nhập (trùng với số điện thoại của một nhân viên đã có trong danh sách)	
+2	Text	Hiển thị thông báo lỗi “Thông tin nhân viên không hợp lệ. Vui lòng kiểm tra lại!” ở góc trên bên phải màn hình 	Hiển thị khi nhấn “Lưu” mà số điện thoại trùng. Sau khi báo lỗi, người dùng nhập lại thông tin
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng chữ “BÌNH YÊN LÀ NHÀ” và dòng “COFFEE & TEA” ở góc trên bên trái thanh điều hướng như hình	
+2	Button	Hiển thị cứng các mục menu chính, mỗi mục kèm biểu tượng: “Quản lý đơn hàng”, “Quản lý món”, “Quản lý doanh thu”, “Quản lý nhân viên”, “Quản lý tài khoản” | - Sự kiện: khi nhấn vào một mục sẽ chuyển đến chức năng tương ứng	
+3	Button	Hiển thị cứng 2 mục con của “Quản lý nhân viên”: “Quản lý thông tin nhân viên” và “Quản lý ca làm” | - Sự kiện: nhấn “Quản lý thông tin nhân viên” hiển thị màn hình Quản lý thông tin nhân viên; nhấn “Quản lý ca làm” chuyển đến chức năng Quản lý ca làm	
+4	Button	Hiển thị cứng biểu tượng và chữ “Đăng xuất” ở cuối thanh điều hướng | - Sự kiện: khi nhấn vào sẽ thực hiện chức năng Đăng xuất	
+5	Text	Hiển thị đường dẫn vị trí hiện tại: “Quản lý nhân viên / Quản lý thông tin nhân viên / Sửa thông tin nhân viên” trên thanh tiêu đề	Cho biết vị trí hiện tại của người dùng
+6	Text	Hiển thị cứng ký hiệu “QL” trong hình tròn và dòng chữ “Đang đăng nhập với vai trò Quản lý.” ở góc trên bên phải	
+7	Text	Hiển thị cứng tiêu đề “Quản lý thông tin nhân viên”	Tiêu đề trang
+8	Button	Hiển thị cứng nút “Hủy” (nền trắng, viền mảnh) | - Sự kiện: khi nhấn vào sẽ hủy việc chỉnh sửa, không lưu các thay đổi	
+9	Button	Hiển thị cứng nút “Lưu” (nền nâu đậm) | - Sự kiện: khi nhấn vào, hệ thống kiểm tra tính hợp lệ của thông tin sau khi chỉnh sửa và lưu vào cơ sở dữ liệu	
+10	Text	Hiển thị cứng tiêu đề bảng “Danh sách nhân viên” và dòng tiêu đề cột “MÃ NV”, “TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”, “ĐỊA CHỈ”, “NGÀY VÀO LÀM”, “TRẠNG THÁI”, “THAO TÁC”	
+11	Table	Hiển thị danh sách nhân viên hiện có 	
+12	Text	Hiển thị mã nhân viên của dòng đang sửa (ví dụ “NV003”) ở dạng chữ, không có ô nhập	Dòng đang sửa được tô nền nổi bật và không hiển thị “Sửa · Xóa” ở cột THAO TÁC
+13	Input Text	Hiển thị sẵn tên hiện tại của nhân viên trong ô “Tên nhân viên” | - Sự kiện: người dùng chỉnh sửa tên nhân viên	Bắt buộc nhập; Tối đa 100 ký tự 
+14	Input Text	Hiển thị sẵn số điện thoại hiện tại trong ô “Số điện thoại” | - Sự kiện: người dùng chỉnh sửa số điện thoại	Bắt buộc nhập; Tối đa 10 ký tự số; Không được trùng số điện thoại của nhân viên khác
+15	Input Text	Hiển thị sẵn địa chỉ hiện tại trong ô địa chỉ | - Sự kiện: người dùng chỉnh sửa địa chỉ	Tối đa 200 ký tự 
+16	Input Text	Hiển thị sẵn ngày vào làm hiện tại (dd/mm/yyyy) | - Sự kiện: người dùng chỉnh sửa ngày vào làm	
+17	Dropdown	Hiển thị danh sách chọn “Trạng thái” với giá trị hiện tại của nhân viên | - Sự kiện: người dùng chọn “Còn làm” hoặc “Nghỉ làm”	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Input Text	Hiển thị tên đã cập nhật  của nhân viên trong ô “Tên nhân viên”	Bắt buộc nhập; Tối đa 100 ký tự 
+2	Input Text	Hiển thị số điện thoại đã cập nhật trong ô “Số điện thoại”	Bắt buộc nhập; Tối đa 10 ký tự số; Không được trùng số điện thoại của nhân viên khác
+3	Input Text	Hiển thị địa chỉ đã cập nhật trong ô địa chỉ	Tối đa 200 ký tự
+4	Input Text	Hiển thị ngày vào làm đã cập nhật (dd/mm/yyyy)	
+5	Text	Hiển thị thông báo “Cập nhật thông tin nhân viên thành công!” ở góc trên bên phải màn hình (thanh viền trái màu xanh lá)	Hiển thị sau khi hệ thống lưu thông tin đã chỉnh sửa thành công
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Input Text	Khi người dùng xóa nội dung “Tên nhân viên” và không nhập giá trị thay thế	
+2	Input Text	Khi người dùng xóa nội dung “Số điện thoại” và không nhập giá trị thay thế	
+3	Text	Hiển thị thông báo lỗi màu đỏ “Vui lòng nhập đầy đủ thông tin bắt buộc!” ngay dưới ô “Tên nhân viên”	Hiển thị tại trường tương ứng
+19	Text	Hiển thị thông báo lỗi màu đỏ “Vui lòng nhập đầy đủ thông tin bắt buộc!” ngay dưới ô “Số điện thoại”	Sau khi báo lỗi, người dùng tiếp tục chỉnh sửa thông tin
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Input Text	Hiển thị số điện thoại người dùng nhập (trùng với số điện thoại của một nhân viên khác trong danh sách)	
+2	Text	Hiển thị thông báo lỗi “Thông tin nhân viên không hợp lệ. Vui lòng kiểm tra lại!” ở góc trên bên phải màn hình (thanh viền trái màu đỏ)	Hiển thị khi nhấn “Lưu” mà số điện thoại trùng. Sau khi báo lỗi, người dùng tiếp tục chỉnh sửa
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị biểu tượng dấu “?” trong hình tròn nền đỏ nhạt ở đầu hộp thoại	
+2	Text	Hiển thị cứng câu hỏi xác nhận “Bạn có chắc chắn muốn xóa nhân viên này không?”	
+3	Text	Hiển thị tên và mã của nhân viên được chọn theo dạng “Tên nhân viên (Mã NV)”	Để người dùng kiểm tra lại nhân viên cần xóa
+4	Button	Hiển thị cứng nút “Hủy” (nền trắng) | - Sự kiện: khi nhấn vào sẽ đóng hộp thoại và quay lại danh sách nhân viên	Không xóa, không thay đổi dữ liệu
+5	Button	Hiển thị cứng nút “Chuyển trạng thái thành nghỉ làm” (nền trắng) | - Sự kiện: khi nhấn vào, hệ thống lưu trạng thái “Nghỉ làm” của nhân viên vào cơ sở dữ liệu và quay lại danh sách nhân viên	
+6	Button	Hiển thị cứng nút “Xác nhận” (nền đỏ) | - Sự kiện: khi nhấn vào, hệ thống xóa nhân viên được chọn khỏi hệ thống và hiển thị thông báo xóa thành công	Nếu gặp lỗi cơ sở dữ liệu hoặc mất kết nối thì hiển thị thông báo “Đã xảy ra lỗi!” và kết thúc
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Table	Danh sách nhân viên được hiển thị lại, không còn dòng của nhân viên vừa xóa 	
+2	Text	Hiển thị thông báo “Xóa nhân viên thành công!” ở góc trên bên phải màn hình (thanh viền trái màu xanh lá)	Hiển thị sau khi hệ thống xóa nhân viên thành công
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Table	Danh sách nhân viên được hiển thị lại; nhân viên được chọn vẫn còn trong danh sách và trạng thái đổi thành “Nghỉ làm”	
+2	Text	Hiển thị thông báo “Đã chuyển trạng thái thành Nghỉ làm” ở góc trên bên phải màn hình	Hiển thị sau khi hệ thống lưu trạng thái “Nghỉ làm” thành công
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý ca làm”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện:  Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên hoặc màn hình quản lý ca làm	
+9	Button	Hiển thị cứng ”Quản lý thông tin nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên	
+10	Button	Hiển thị cứng“Quản lý ca làm” | Sự kiện : Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý ca làm.	
+11	Button	Hiển thị cứng “Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình quản lý tài khaonr	
+12	Button	Hiển thị cứng “Ngày” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo ngày.	
+13	Button	Hiển thị  cứng “Tuần” | Sự kiện: Khi nhấn vào hiển thị ca làm theo tuần	
+14	Button	Hiển thị cứng “Tháng” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo tháng.	
+15	Select Input	Chọn ngày muốn xem	
+16	Button	Hiển thị cứng “Lập lịch làm việc” | Sự kiện: khi nhấn vào hiển thị màn hình lập lịch làm việc	
+17	Output Text	Hiển thị ngày tháng năm như hình	
+18	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/Quản lý ca làm”như hình trên	Cho biết vị trí hiện tại của người dùng
+19	Box	Hiển thị cứng “MÃ NV”,”TÊN NHÂN VIÊN”,”MÃ CA LÀM”,”TRẠNG THÁI”,”NGÀY LAMG”,”GIỜ BẮT ĐẦU”,”GIỜ KẾT THÚC”. | Sự kiện; Hiển thị thông tin chi tiết lịch làm việc của nhân viên theo ngày.  | 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý ca làm”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện:  Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên hoặc màn hình quản lý ca làm	
+9	Button	Hiển thị cứng ”Quản lý thông tin nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên	
+10	Button	Hiển thị cứng“Quản lý ca làm” | Sự kiện : Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý ca làm.	
+11	Button	Hiển thị cứng “Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình quản lý tài khoản.	
+12	Button	Hiển thị cứng “Ngày” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo ngày .	
+13	Button	Hiển thị  cứng “Tuần” | Sự kiện: Khi nhấn vào hiển thị ca làm theo tuần như hình.	
+14	Button	Hiển thị cứng “Tháng” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo tháng.	
+15	Select Input	Chọn ngày muốn xem	
+16	Output Text	Hiển thị ngày tháng năm như hình	
+18	Output Text	Hiển thị cứng “Lập lịch làm việc” | Sự kiện: khi nhấn vào hiển thị màn hình lập lịch làm việc	
+17	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/Quản lý ca làm”như hình trên	Cho biết vị trí hiện tại của người dùng
+18	Button	Hiển thị cứng”Lập lịch làm việc” | Sự kiện: khi nhấn vào sẽ hiển thị màn hình Lập lịch làm việc	
+19	Box	Hiển thị thông tin lịch làm việc theo tuần đã chọn	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý ca làm”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện:  Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên hoặc màn hình quản lý ca làm	
+9	Button	Hiển thị cứng ”Quản lý thông tin nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên	
+10	Button	Hiển thị cứng“Quản lý ca làm” | Sự kiện : Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý ca làm.	
+11	Button	Hiển thị cứng “Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình quản lý tài khoản.	
+12	Button	Hiển thị cứng “Ngày” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo ngày .	
+13	Button	Hiển thị  cứng “Tuần” | Sự kiện: Khi nhấn vào hiển thị ca làm theo tuần như hình.	
+14	Button	Hiển thị cứng “Tháng” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo tháng.	
+15	Select Input	Chọn ngày muốn xem	
+16	Output Text	Hiển thị ngày tháng năm như hình	
+18	Output Text	Hiển thị cứng “Lập lịch làm việc” | Sự kiện: khi nhấn vào hiển thị màn hình lập lịch làm việc	
+17	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/Quản lý ca làm”như hình trên	Cho biết vị trí hiện tại của người dùng
+18	Button	Hiển thị cứng”Lập lịch làm việc” | Sự kiện: khi nhấn vào sẽ hiển thị màn hình Lập lịch làm việc	
+19	Box	Hiển thị thông tin lịch làm việc theo tháng đã chọn như hình	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Lập lịch làm việc" như hình trên	
+2	Text	Hiển thị cứng Thời gian lập lịch	
+3	 Radio Button	Nhóm trạng thái thời gian lập lịch gồm: | • Một ngày | • Khoảng thời gian | Sự kiện: chọn 1 trong 2 trạng thái.	
+4	Select Input	Chọn ngày bắt đầu  	
+5	Select Input	Chọn ngày kết thúc	
+6	Text	Hiển thị cứng “Ca làm” như hình trên	
+7	Text	Hiển thị cứng”Giờ bắt đầu”như hình trên | 	
+8	Text	Hiển thị cứng “Giờ kết thúc”như hình trên	
+9	Select Input	Chọn ca làm có sẵn	
+10	Output Text	Hiển thị Thời gian bắt đầu và thời gian kết thúc ca | .	
+11	Text	Hiển thị cứng “Nhân viên phân công”như hình	
+12	Select Input	Chọn nhân viên được phân vào ca 	
+13	Button	Hiển thị cứng “Hủy” | Sự kiện: Khi nhấn vào hiểnmàn hình quản lý ca làm ban đầu .	
+14	Button	Hiển thị cứng “Xác nhận” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Lập lịch làm việc thành công.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Lập lịch làm việc" như hình trên	
+2	Text	Hiển thị cứng Thời gian lập lịch	
+3	 Radio Button	Nhóm trạng thái thời gian lập lịch gồm: | • Một ngày | • Khoảng thời gian | Sự kiện: chọn 1 trong 2 trạng thái.	
+4	Select Input	Chọn ngày bắt đầu  	
+5	Select Input	Chọn ngày kết thúc	
+6	Text	Hiển thị cứng “Ca làm” như hình trên	
+7	Text	Hiển thị cứng”Giờ bắt đầu”như hình trên | 	
+8	Text	Hiển thị cứng “Giờ kết thúc”như hình trên	
+9	Select Input	Chọn ca làm có sẵn	
+10	input Text	Nhập Thời gian bắt đầu và thời gian kết thúc ca | .	
+11	Text	Hiển thị cứng “Nhân viên phân công”như hình	
+12	Select Input	Chọn nhân viên được phân vào ca 	
+13	Button	Hiển thị cứng “Hủy” | Sự kiện: Khi nhấn vào hiểnmàn hình quản lý calàm ban đầu .	
+14	Button	Hiển thị cứng “Xác nhận” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Lập lchj làm việc thành công.	
+15	Text	Hiển thị thông báo”Vui lòng chọn thời gian lập lịch!” như trên hình khi bỏ trống.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Lập lịch làm việc" như hình trên	
+2	Text	Hiển thị cứng Thời gian lập lịch	
+3	 Radio Button	Nhóm trạng thái thời gian lập lịch gồm: | • Một ngày | • Khoảng thời gian | Sự kiện: chọn 1 trong 2 trạng thái.	
+4	Select Input	Chọn ngày bắt đầu  	
+5	Select Input	Chọn ngày kết thúc	
+6	Text	Hiển thị cứng “Ca làm” như hình trên	
+7	Text	Hiển thị cứng”Giờ bắt đầu”như hình trên | 	
+8	Text	Hiển thị cứng “Giờ kết thúc”như hình trên	
+9	Select Input	Chọn ca làm có sẵn	
+10	Input Text	Nhập Thời gian bắt đầu và thời gian kết thúc ca | .	
+11	Text	Hiển thị cứng “Nhân viên phân công”như hình	
+12	Select Input	Chọn nhân viên được phân vào ca 	
+13	Button	Hiển thị  cứng “Hủy” | Sự kiện: Khi nhấn vào hiểnmàn hình quản lý calàm ban đầu .	
+14	Button	Hiển thị cứng “Xác nhận” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Lập lchj làm việc thành công.	
+15	Text	Hiển thị thông báo”Thời gian không hợp lệ.Vui lòng nhập lại!” như trên hình khi nhập sai thời gian.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Lập lịch làm việc" như hình trên	
+2	Text	Hiển thị cứng Thời gian lập lịch	
+3	 Radio Button	Nhóm trạng thái thời gian lập lịch gồm: | • Một ngày | • Khoảng thời gian | Sự kiện: chọn 1 trong 2 trạng thái.	
+4	Select Input	Chọn ngày bắt đầu  	
+5	Select Input	Chọn ngày kết thúc	
+6	Text	Hiển thị cứng “Ca làm” như hình trên	
+7	Text	Hiển thị cứng”Giờ bắt đầu”như hình trên | 	
+8	Text	Hiển thị cứng “Giờ kết thúc”như hình trên	
+9	Select Input	Chọn ca làm có sẵn	
+10	Input Text	Nhập Thời gian bắt đầu và thời gian kết thúc ca | .	
+11	Text	Hiển thị cứng “Nhân viên phân công”như hình	
+12	Select Input	Chọn nhân viên được phân vào ca 	
+13	Button	Hiển thị  cứng “Hủy” | Sự kiện: Khi nhấn vào hiểnmàn hình quản lý calàm ban đầu .	
+14	Button	Hiển thị cứng “Xác nhận” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Lập lchj làm việc thành công.	
+15	Text	Hiển thị thông báo”Chưa có nhân viên được chọn!” như trên hình khi chưa chọn nhân viên.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Lập lịch làm việc" như hình trên	
+2	Text	Hiển thị cứng Thời gian lập lịch	
+3	 Radio Button	Nhóm trạng thái thời gian lập lịch gồm: | • Một ngày | • Khoảng thời gian | Sự kiện: chọn 1 trong 2 trạng thái.	
+4	Select Input	Chọn ngày bắt đầu  	
+5	Select Input	Chọn ngày kết thúc	
+6	Text	Hiển thị cứng “Ca làm” như hình trên	
+7	Text	Hiển thị cứng”Giờ bắt đầu”như hình trên | 	
+8	Text	Hiển thị cứng “Giờ kết thúc”như hình trên	
+9	Select Input	Chọn ca làm có sẵn	
+10	Input Text	Nhập Thời gian bắt đầu và thời gian kết thúc ca | .	
+11	Text	Hiển thị cứng “Nhân viên phân công”như hình	
+12	Select Input	Chọn nhân viên được phân vào ca 	
+13	Button	Hiển thị  cứng “Hủy” | Sự kiện: Khi nhấn vào hiểnmàn hình quản lý calàm ban đầu .	
+14	Button	Hiển thị cứng “Xác nhận” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Lập lchj làm việc thành công.	
+15	Text	Hiển thị thông báo”Lịch làm việc bị trùng!” như trên hình khi nhập Trùng lịch làm việc với nhân viên khác.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Chi tiết ca làm" như hình trên	
+2	Text	Hiển thị cứng “mã ca làm” như hình	
+3	Text	Hiển thị “ngày làm” như hình	
+4	Output Text	Hiển thị  mã ca làm như hình	
+5	Output Text	Hiển thị ngày làm như trên hình	
+6	Text	Hiển thị cứng “Giờ bắt đầu” như hình trên	
+7	Text	Hiển thị cứng”Giờ kết thúc”như hình trên | 	
+8	Text	Hiển thị cứng “Nhân viên đac được phân công”như hình trên	
+9	Output Text	Hiển thị trạng thái”Được phân công” của ca làm nhân viên như hình	
+10	Output Text	Hiển thị trạng thái”Đã đổi” của ca làm nhân viên như hình | .	
+11	Button	Hiển thị cứng “Hủy”như hình | Sự kiện: Khi nhân nút sẽ xóa nhân viên ra khỏi ca làm đó	
+12	Select Input	Chọn nhân viên muốn them vào ca	
+13	Button	Hiển thị  cứng “Hủy” | Sự kiện: Khi nhấn vào hiểnmàn hình quản lý ca làm ban đầu .	
+14	Button	Hiển thị cứng “Xác nhận” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình sửa lịch làm việc thành công.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý ca làm”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện:  Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên hoặc màn hình quản lý ca làm	
+9	Button	Hiển thị cứng ”Quản lý thông tin nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên	
+10	Button	Hiển thị cứng“Quản lý ca làm” | Sự kiện : Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý ca làm.	
+11	Button	Hiển thị cứng “Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình quản lý tài khaonr	
+12	Button	Hiển thị cứng “Ngày” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo ngày.	
+13	Button	Hiển thị  cứng “Tuần” | Sự kiện: Khi nhấn vào hiển thị ca làm theo tuần	
+14	Button	Hiển thị cứng “Tháng” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo tháng.	
+15	Select Input	Chọn ngày muốn xem	
+16	Text	Hiển thị cứng ngày thánh năm như hình	
+17	Button	Hiển thị cứng “Lập lịch làm việc” | Sự kiện: khi nhấn vào hiển thị màn hình lập lịch làm việc	
+18	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/Quản lý ca làm”như hình trên	Cho biết vị trí hiện tại của người dùng
+19	Text	Hiển thị thông báo “Đã sửa thành công” như màn hình 	
+20	Box	Hiển thị thông tin Lịch làm việc sau khi cập nhật thành công như hình  | 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý ca làm”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện:  Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên hoặc màn hình quản lý ca làm	
+9	Button	Hiển thị cứng ”Quản lý thông tin nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý thông tin nhân viên	
+10	Button	Hiển thị cứng“Quản lý ca làm” | Sự kiện : Khi nhấn vào sẽ hiển thị lựa chọn  màn hình Quản lý ca làm.	
+11	Button	Hiển thị cứng “Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình quản lý tài khaonr	
+12	Button	Hiển thị cứng “Ngày” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo ngày.	
+13	Button	Hiển thị  cứng “Tuần” | Sự kiện: Khi nhấn vào hiển thị ca làm theo tuần	
+14	Button	Hiển thị cứng “Tháng” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình ca làm theo tháng.	
+15	Select Input	Chọn ngày muốn xem	
+16	Text	Hiển thị cứng ngày thánh năm như hình	
+17	Button	Hiển thị cứng “Lập lịch làm việc” | Sự kiện: khi nhấn vào hiển thị màn hình lập lịch làm việc	
+18	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/Quản lý ca làm”như hình trên	Cho biết vị trí hiện tại của người dùng
+19	Text	Hiển thị thông báo “Lập lịch làm việc thành công” như màn hình 	
+20	Box	Hiển thị thông tin Lịch làm việc sau khi Lập lịch làm việc thành công như hình . | 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị logo của "Bình Yên Là Nhà – Coffee & Tea" như hình trên	
+2	Menu	Hiển thị cứng icon và "Quản lý đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+3	Menu	Hiển thị cứng icon và "Quản lý món"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+4	Menu	Hiển thị cứng icon và "Quản lý doanh thu"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+5	Menu	Hiển thị cứng icon và "Quản lý nhân viên"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên	
+6	Menu	Hiển thị cứng icon và "Quản lý tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+7	Button	Hiển thị cứng icon và "Đăng xuất"  | - Sự kiện: khi nhấn vào sẽ hiển thị hộp thoại xác nhận Đăng xuất	
+8	Text	Hiển thị cứng đường dẫn "Quản lý tài khoản /" 	Cho biết vị trí hiện tại của người dùng
+9	Icon	Hiển thị icon người dùng với chữ viết tắt "QL" như hình trên	Thay đổi theo vai trò tài khoản đăng nhập
+10	Text	Hiển thị "Đang đăng nhập với vai trò Quản lý." 	Thay đổi theo vai trò tài khoản đăng nhập
+11	Text	Hiển thị cứng "Quản lý tài khoản" 	
+12	Button	Hiển thị cứng "+ Tạo tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Tạo tài khoản	
+13	Text	Hiển thị cứng "Danh sách tài khoản" 	
+14	Text	Hiển thị cứng "MÃ TÀI KHOẢN" và mã tài khoản của từng tài khoản 	
+15	Text	Hiển thị cứng "TÊN ĐĂNG NHẬP" và tên đăng nhập của từng tài khoản 	
+16	Text	Hiển thị cứng "MẬT KHẨU" và mật khẩu dưới dạng ẩn "••••••••" 	
+17	Text	Hiển thị cứng "MÃ NHÂN VIÊN" và mã nhân viên được cấp tài khoản 	Mỗi nhân viên chỉ có một tài khoản
+18	Text	Hiển thị cứng "VAI TRÒ" và vai trò của tài khoản: "Quản lý" hoặc "Nhân viên" 	
+19	Label	Hiển thị cứng "TRẠNG THÁI" và trạng thái của tài khoản: "Hoạt động" hoặc "Khóa" 	Tài khoản bị Khóa không đăng nhập được
+20	Button	Hiển thị cứng "THAO TÁC" và 2 nút "Sửa", "Xóa" ở mỗi dòng  | - Sự kiện: nhấn "Sửa" sẽ hiển thị màn hình Sửa thông tin tài khoản của tài khoản ở dòng đó | - Sự kiện: nhấn "Xóa" sẽ xóa tài khoản ở dòng đó khỏi danh sách	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng đường dẫn "Quản lý tài khoản / Tạo tài khoản" như hình trên	Cho biết vị trí hiện tại của người dùng
+2	Text	Hiển thị cứng "Tạo tài khoản" 	
+3	Text	Hiển thị cứng "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống" 	
+4	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô trống nhập tên đăng nhập, bộ đếm kí tự "0/20" và dòng quy định "Tối đa 20 kí tự"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập đã có	
+5	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô trống nhập mật khẩu, icon con mắt và dòng quy định "6-50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)"  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+6	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn mã nhân viên  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+7	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" và ô chọn vai trò  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+8	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	Đang chọn "Hoạt động" Mặc định là Hoạt động. Tài khoản bị Khóa không đăng nhập được
+9	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+10	Button	Hiển thị cứng "Tạo"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã nhập: | + Thông tin hợp lệ: lưu tài khoản mới và hiển thị màn hình Tạo tài khoản thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Tạo tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống" 	
+3	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "mai.nv", bộ đếm kí tự "6/20" và dòng quy định "Tối đa 20 kí tự"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập đã có	
+4	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu dạng ẩn "••••••••", icon con mắt và dòng quy định "6-50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)"  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+5	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn mã nhân viên  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+6	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý (đang mở) | + Bắt buộc chọn	
+7	Dropdown list	Hiển thị danh sách vai trò gồm 2 lựa chọn "Nhân viên", "Quản lý"  | - Sự kiện: khi nhấn vào một lựa chọn sẽ chọn vai trò đó và đóng danh sách	
+8	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+9	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+10	Button	Hiển thị cứng "Tạo"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã nhập: | + Thông tin hợp lệ: lưu tài khoản mới và hiển thị màn hình Tạo tài khoản thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Tạo tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống	
+3	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "mai.nv", bộ đếm kí tự "6/20" và dòng quy định "Tối đa 20 kí tự" như hình trên | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập đã có	
+4	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu dạng ẩn "••••••••", icon con mắt và dòng quy định "6-50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)"  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+5	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn mã nhân viên  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống (đang mở) | + Chỉ chọn nhân viên chưa có tài khoản	
+6	Dropdown list	Hiển thị danh sách nhân viên có trong hệ thống, mỗi dòng gồm mã và tên nhân viên: | + NV001 Nguyễn Văn An, NV002 Lê Thị Lan, NV003 Trần Văn Minh, NV004 Phạm Thị Hoa, NV005 Võ Văn Tuấn, NV006 Lê Ngọc My: có nhãn "Đã có tài khoản"  | + NV007 Trần Thị Mai: đang được chọn | + NV008 Phạm Thu Hà: đang bị che một phần, cuộn xuống để xem | - Sự kiện: khi nhấn vào một dòng sẽ chọn nhân viên đó và đóng danh sách	
+7	Scroll Bar	Hiển thị thanh cuộn dọc ở cạnh phải danh sách nhân viên  | - Sự kiện: kéo thanh cuộn hoặc lăn chuột để xem thêm nhân viên trong danh sách	
+8	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	Bắt buộc chọn một vai trò
+9	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+10	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+11	Button	Hiển thị cứng "Tạo"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã nhập: | + Thông tin hợp lệ: lưu tài khoản mới và hiển thị màn hình Tạo tài khoản thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị logo của "Bình Yên Là Nhà – Coffee & Tea" như hình trên	
+2	Menu	Hiển thị cứng icon và "Quản lý đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+3	Menu	Hiển thị cứng icon và "Quản lý món"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+4	Menu	Hiển thị cứng icon và "Quản lý doanh thu"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+5	Menu	Hiển thị cứng icon và "Quản lý nhân viên"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên	
+6	Menu	Hiển thị cứng icon và "Quản lý tài khoản" - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+7	Button	Hiển thị cứng icon và "Đăng xuất"  | - Sự kiện: khi nhấn vào sẽ hiển thị hộp thoại xác nhận Đăng xuất	
+8	Text	Hiển thị cứng đường dẫn "Quản lý tài khoản /" như hình trên	Cho biết vị trí hiện tại của người dùng
+9	Icon	Hiển thị icon người dùng với chữ viết tắt "QL" như hình trên	
+10	Text	Hiển thị "Đang đăng nhập với vai trò Quản lý." 	
+11	Text	Hiển thị cứng "Quản lý tài khoản" 	
+12	Button	Hiển thị cứng "+ Tạo tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Tạo tài khoản	
+13	Text	Hiển thị cứng "Danh sách tài khoản" 	
+14	Table	Hiển thị bảng danh sách 6 tài khoản gồm các cột "MÃ TÀI KHOẢN", "TÊN ĐĂNG NHẬP", "MẬT KHẨU", "MÃ NHÂN VIÊN", "VAI TRÒ", "TRẠNG THÁI", "THAO TÁC" |  - Sự kiện: nhấn "Sửa" sẽ hiển thị màn hình Sửa thông tin tài khoản; nhấn "Xóa" sẽ xóa tài khoản ở dòng đó	
+15	Box	Hiển thị thông báo "Tạo tài khoản thành công" 	
+16	Text	Hiển thị tài khoản vừa tạo "TK007 – mai.nv – NV007 – Nhân viên – Hoạt động" ở cuối danh sách 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Tạo tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống" 	
+3	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô trống nhập tên đăng nhập, bộ đếm kí tự "0/20"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập đã có	
+4	Text	Hiển thị cứng "Vui lòng nhập tên đăng nhập!" 	
+5	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô trống nhập mật khẩu, icon con mắt  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+6	Text	Hiển thị cứng "Vui lòng nhập mật khẩu!" 	
+7	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn hiển thị nhân viên "NV007   Trần Thị Mai"  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+8	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+9	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+10	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+11	Button	Hiển thị cứng "Tạo"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã nhập: | + Thông tin hợp lệ: lưu tài khoản mới và hiển thị màn hình Tạo tài khoản thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Tạo tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống" 	
+3	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "lan.thungan", bộ đếm kí tự "11/20"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập đã có	
+4	Text	Hiển thị cứng "Tên đăng nhập đã tồn tại!" 	
+5	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu dạng ẩn "••••••••", icon con mắt và dòng quy định "6-50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)"  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+6	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn hiển thị nhân viên "NV007   Trần Thị Mai"  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+7	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+8	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa" như hình trê | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+9	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+10	Button	Hiển thị cứng "Tạo"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã nhập: | + Thông tin hợp lệ: lưu tài khoản mới và hiển thị màn hình Tạo tài khoản thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Tạo tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống" 	
+3	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "mai.nv", bộ đếm kí tự "6/20"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập đã có	
+4	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu "mai123" dạng chữ thường, icon con mắt  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+5	Text	Hiển thị cứng "Mật khẩu không đạt yêu cầu!" 	
+6	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn hiển thị nhân viên "NV007   Trần Thị Mai"  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+7	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+8	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+9	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+10	Button	Hiển thị cứng "Tạo"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã nhập: | + Thông tin hợp lệ: lưu tài khoản mới và hiển thị màn hình Tạo tài khoản thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Tạo tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống" 	
+3	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "lan.thungan", bộ đếm kí tự "11/20" và dòng quy định "Tối đa 20 kí tự"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập đã có	
+4	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu dạng ẩn "••••••••", icon con mắt và dòng quy định "6-50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)"  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+5	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn hiển thị nhân viên "NV002    Lê Thị Lan"  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+6	Text	Hiển thị cứng "Nhân viên này đã có tài khoản!" 	
+7	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+8	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+9	Button	Hiển thị cứng "Hủy" như hình trên | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+10	Button	Hiển thị cứng "Tạo"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã nhập: | + Thông tin hợp lệ: lưu tài khoản mới và hiển thị màn hình Tạo tài khoản thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng đường dẫn "Quản lý tài khoản / Sửa thông tin tài khoản" như hình trên	
+2	Text	Hiển thị dòng tài khoản đang được sửa "TK004", 	
+3	Text	Hiển thị cứng "Sửa thông tin tài khoản" 	
+4	Text	Hiển thị cứng "Đang sửa tài khoản TK004" 	
+5	Input Text	Hiển thị cứng "Mã tài khoản" và mã tài khoản đang sửa "TK004"  | - Sự kiện: không cho phép chỉnh sửa	
+6	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "hoa.nv", bộ đếm kí tự "6/20" và dòng quy định "Tối đa 20 ký tự"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập của tài khoản khác	
+7	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu hiện tại dạng ẩn "••••••••", icon con mắt và dòng quy định "6–50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)"  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+8	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn hiển thị nhân viên "NV004 · Phạm Thị Hoa"  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+9	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+10	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+11	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+12	Button	Hiển thị cứng "Lưu thay đổi"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã sửa: | + Thông tin hợp lệ: lưu thay đổi và hiển thị màn hình Cập nhật thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị logo của "Bình Yên Là Nhà – Coffee & Tea" như hình trên	
+2	Menu	Hiển thị cứng icon và "Quản lý đơn hàng"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+3	Menu	Hiển thị cứng icon và "Quản lý món"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+4	Menu	Hiển thị cứng icon và "Quản lý doanh thu"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+5	Menu	Hiển thị cứng icon và "Quản lý nhân viên"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên	
+6	Menu	Hiển thị cứng icon và "Quản lý tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+7	Button	Hiển thị cứng icon và "Đăng xuất"  | - Sự kiện: khi nhấn vào sẽ hiển thị hộp thoại xác nhận Đăng xuất	
+8	Text	Hiển thị cứng đường dẫn "Quản lý tài khoản / Sửa thông tin tài khoản" 	
+9	Icon	Hiển thị icon người dùng với chữ viết tắt "QL" 	
+10	Text	Hiển thị "Đang đăng nhập với vai trò Quản lý." 	
+11	Text	Hiển thị cứng "Quản lý tài khoản" 	
+12	Button	Hiển thị cứng "+ Tạo tài khoản"  | - Sự kiện: khi nhấn vào sẽ hiển thị màn hình Tạo tài khoản	
+13	Text	Hiển thị cứng "Danh sách tài khoản" 	
+14	Table	Hiển thị bảng danh sách 6 tài khoản gồm các cột "MÃ TÀI KHOẢN", "TÊN ĐĂNG NHẬP", "MẬT KHẨU", "MÃ NHÂN VIÊN", "VAI TRÒ", "TRẠNG THÁI", "THAO TÁC"  | - Sự kiện: nhấn "Sửa" sẽ hiển thị màn hình Sửa thông tin tài khoản; nhấn "Xóa" sẽ xóa tài khoản ở dòng đó	
+15	Box	Hiển thị thông báo "Cập nhật thông tin tài khoản thành công!" 	
+16	Text	Hiển thị tài khoản vừa sửa "TK004" với trạng thái mới "Khóa" 	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Sửa thông tin tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Đang sửa tài khoản TK004" 	Mã tài khoản thay đổi theo tài khoản được chọn sửa
+3	Input Text	Hiển thị cứng "Mã tài khoản" và mã tài khoản đang sửa "TK004"  | - Sự kiện: không cho phép chỉnh sửa	
+4	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "lan.thungan", bộ đếm kí tự "11/20"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập của tài khoản khác	
+5	Text	Hiển thị cứng "Tên đăng nhập đã tồn tại!" 	
+6	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu hiện tại dạng ẩn "••••••••", icon con mắt và dòng quy định "6–50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)"  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+7	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn hiển thị nhân viên "NV004 · Phạm Thị Hoa"  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+8	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+9	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+10	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+11	Button	Hiển thị cứng "Lưu thay đổi"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã sửa: | + Thông tin hợp lệ: lưu thay đổi và hiển thị màn hình Cập nhật thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Sửa thông tin tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Đang sửa tài khoản TK004" 	Mã tài khoản thay đổi theo tài khoản được chọn sửa
+3	Input Text	Hiển thị cứng "Mã tài khoản" và mã tài khoản đang sửa "TK004"  | - Sự kiện: không cho phép chỉnh sửa	
+4	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "hoa.nv", bộ đếm kí tự "6/20" và dòng quy định "Tối đa 20 ký tự"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập của tài khoản khác	
+5	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu "hoa123" dạng chữ thường, icon con mắt  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+6	Text	Hiển thị cứng "Mật khẩu không đạt yêu cầu!" 	
+7	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn hiển thị nhân viên "NV004 · Phạm Thị Hoa"  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+8	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+9	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa" như hình trên | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+10	Button	Hiển thị cứng "Hủy" như hình trên | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+11	Button	Hiển thị cứng "Lưu thay đổi" như hình trên | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã sửa: | + Thông tin hợp lệ: lưu thay đổi và hiển thị màn hình Cập nhật thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Text	Hiển thị cứng "Sửa thông tin tài khoản" như hình trên	
+2	Text	Hiển thị cứng "Đang sửa tài khoản TK004" 	Mã tài khoản thay đổi theo tài khoản được chọn sửa
+3	Input Text	Hiển thị cứng "Mã tài khoản" và mã tài khoản đang sửa "TK004"  | - Sự kiện: không cho phép chỉnh sửa	
+4	Input Text	Hiển thị cứng "Tên đăng nhập" kèm dấu "*" màu đỏ, ô nhập hiển thị tên đăng nhập "hoa.nv", bộ đếm kí tự "6/20" và dòng quy định "Tối đa 20 ký tự"  | - Sự kiện: nhập tên đăng nhập | + Bắt buộc nhập | + Tối đa 20 kí tự | + Không trùng với tên đăng nhập của tài khoản khác	
+5	Input Text	Hiển thị cứng "Mật khẩu" kèm dấu "*" màu đỏ, ô nhập hiển thị mật khẩu hiện tại dạng ẩn "••••••••", icon con mắt và dòng quy định "6–50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)"  | - Sự kiện: nhập mật khẩu; nhấn icon con mắt để hiện hoặc ẩn mật khẩu | + Bắt buộc nhập | + Từ 6 đến 50 kí tự | + Có ít nhất 1 kí tự đặc biệt (@, #, !)	
+6	Dropdown	Hiển thị cứng "Mã nhân viên" và ô chọn hiển thị nhân viên "NV005 · Võ Văn Tuấn"  | - Sự kiện: khi nhấn vào sẽ thả xuống danh sách nhân viên có trong hệ thống | + Chỉ chọn nhân viên chưa có tài khoản	
+7	Text	Hiển thị cứng "Nhân viên này đã có tài khoản!" 	
+8	Dropdown	Hiển thị cứng "Vai trò" kèm dấu "*" màu đỏ và ô chọn hiển thị vai trò "Nhân viên"  | - Sự kiện: khi nhấn vào sẽ thả xuống các lựa chọn: Nhân viên, Quản lý | + Bắt buộc chọn	
+9	Button	Hiển thị cứng "Trạng thái" và 2 nút "Hoạt động", "Khóa"  | - Sự kiện: khi nhấn vào nút nào sẽ chọn trạng thái đó cho tài khoản | + Chỉ chọn một trong hai trạng thái	
+10	Button	Hiển thị cứng "Hủy"  | - Sự kiện: khi nhấn vào sẽ đóng màn hình hiện tại, không lưu dữ liệu và quay về màn hình Quản lý tài khoản	
+11	Button	Hiển thị cứng "Lưu thay đổi"  | - Sự kiện: khi nhấn vào sẽ kiểm tra thông tin đã sửa: | + Thông tin hợp lệ: lưu thay đổi và hiển thị màn hình Cập nhật thành công | + Thông tin không hợp lệ: hiển thị thông báo lỗi tại ô nhập sai	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị  icon thông báo như hình	
+2	Text	Hiển thị thông báo xác nhận “Bạn có chắc chắn muốn xóa tài khoản này không?”	
+3	Button	Hiển thị nút “Hủy” | Sự kiện: khi nhấn nút sẽ hiển thị lại danh sách tài khoản	
+4	Button	Hiển thị cứng “Khóa tài khoản này” | Sự kiện: Khi nhấn nút sẽ điều hướng sang màn hình khóa tài khoản	
+5	Button	Hiển thị cứng “Xác nhận” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tài khoản thành công	
+			
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò của người dùng	
+3	Text	Hiển thị cứng “Quản lý tài khoản”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Hiển thị ô trống nhập tên đăng nhập 	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Tạo tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Tạo tài khoản.	
+13	Text	Hiển thị  thông báo  “Xóa tài khoản thành công!”	
+14	Box	Hiển thị cứng “MÃ TÀI KHOẢN”,”TÊN ĐĂNG NHẬP”,”MẬT KHẨU”,”MÃ NHÂN VIÊN”,”VAI TRÒ”,”TRẠNG THÁI”,”THAO TÁC”. | Sự kiện: Hiển thị thông tin chi tiết tài khoản trong danh sách tài khoản sau khi xóa tài khoản thành công	
+15	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/”như hình trên	Cho biết vị trí hiện tại của người dùng
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý tài khoản”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Hiển thị ô trống nhập tên đăng nhập 	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Tạo tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Tạo tài khoản.	
+13	Text	Hiển thị  thông báo  “Đã khóa tài khoản này”	
+14	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/”như hình trên	Cho biết vị trí hiện tại của người dùng
+15	Box	Hiển thị cứng “MÃ TÀI KHOẢN”,”TÊN ĐĂNG NHẬP”,”MẬT KHẨU”,”MÃ NHÂN VIÊN”,”VAI TRÒ”,”TRẠNG THÁI”,”THAO TÁC”. | Sự kiện: Hiển thị thông tin chi tiết tài khoản trong danh sách tài khoản và hiển thị trạng thái khóa cho tài khoản đã chọn trước đó.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Logo	Hiển thị Logo của Bình yên là nhà Tea & Coffee như hình trên	
+2	Text	Hiển thị vai trò  của  người dùng	
+3	Text	Hiển thị cứng “Quản lý tài khoản”	
+4	Button	Hiển thị cứng “Đăng xuất” | Sự kiện: Khi nhấn vào sẽ thoát khỏi hệ thống	
+5	Button	Hiển thị cứng “ Quản lý đơn hàng” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý đơn hàng	
+6	Button	Hiển thị cứng “Quản lý món” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý món	
+7	Button	Hiển thị cứng “Quản lý doanh thu” | Sự kiện : Khi nhấn vào sẽ hiển thị màn hình Quản lý doanh thu	
+8	Button	Hiển thị cứng “Quản lý nhân viên” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý nhân viên 	
+9	Button	Hiển thị cứng”Quản lý tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị màn hình Quản lý tài khoản	
+10	Input Text	Hiển thị ô trống nhập tên đăng nhập 	
+11	Button	Hiển thị cứng “Tìm kiếm” | Sự kiện: Khi nhấn vào sẽ điều hướng sang màn hình tiếp theo 	
+12	Button	Hiển thị cứng “Tạo tài khoản” | Sự kiện: Khi nhấn vào sẽ hiển thị  màn hình Tạo tài khoản.	
+13	Text	Hiển thị  thông báo  “Không thể xóa tài khoản này”	
+14	Text	Hiển thị cứng đường dẫn “Quản lý tài khoản/”như hình trên	Cho biết vị trí hiện tại của người dùng
+15	Box	Hiển thị cứng “MÃ TÀI KHOẢN”,”TÊN ĐĂNG NHẬP”,”MẬT KHẨU”,”MÃ NHÂN VIÊN”,”VAI TRÒ”,”TRẠNG THÁI”,”THAO TÁC”. | Sự kiện: Hiển thị thông tin chi tiết tài khoản trong danh sách tài khoản tại màn hình quản lý tài khoản ban đầu.	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị icon đăng xuất trên nền tròn màu be như hình trên	
+2	Text	Hiển thị cứng "Đăng xuất" như hình trên	
+3	Text	Hiển thị cứng "Bạn có chắc chắn muốn đăng xuất?" 	
+4	Button	Hiển thị cứng "Không"  | - Sự kiện: khi nhấn vào sẽ đóng hộp thoại, giữ nguyên phiên đăng nhập và quay lại màn hình đang sử dụng	
+5	Button	Hiển thị cứng "Có"  | - Sự kiện: khi nhấn vào sẽ thoát khỏi hệ thống và điều hướng đến màn hình Đăng nhập	
+
+=== TABLE ===
+NO	LOẠI	MÔ TẢ	GHI CHÚ
+1	Icon	Hiển thị icon dấu chấm than màu đỏ trên nền tròn hồng nhạt như hình trên	Biểu thị thông báo lỗi
+2	Text	Hiển thị cứng "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!" 	
+3	Button	Hiển thị cứng "Quay về"  | - Sự kiện: khi nhấn vào sẽ đóng thông báo và quay về màn hình trước đó	

@@ -1,0 +1,491 @@
+TRƯỜNG ĐẠI HỌC KINH TẾ - ĐẠI HỌC ĐÀ NẴNG
+KHOA THỐNG KÊ – TIN HỌC
+
+
+
+
+
+
+
+
+
+Software Requirement Specification 
+Hệ thống quản lý bán hàng Bình Yên Là Nhà Coffee & Tea
+
+
+
+Class: 50K21.1
+Group: 50K211.01.3007
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Da Nang, 2026
+TỔNG HỢP CÁC CHỈNH SỬA
+Thay đổi Use Case: 1.1 Đăng xuất extend 1. Đăng nhập thành 7. Đăng xuất include Đăng nhập
+
+Contents
+1	OVERVIEW	4
+1.1	Purpose	4
+1.2	Business objectives	4
+1.3	Scope	4
+2	OVERALL DESCRIPTION	6
+2.1	User requirements	6
+2.2	Business workflow	7
+2.3	Use case diagram	8
+3	FUNCTIONAL REQUIREMENTS	9
+3.1	Use Case Đăng nhập	9
+3.2	Use Case Quản lý đơn hàng	10
+3.3	Use Case Quản lý món	18
+3.4	Use Case Quản lý doanh thu	27
+3.5	Use Case Quản lý nhân viên	32
+3.6	Use Case Quản lý tài khoản	44
+3.7	Use Case Đăng xuất	50
+4	NON-FUNCTIONAL REQUIREMENTS	52
+4.1	Performance requirements	52
+4.2	Usability requirements	52
+4.3	Operational requirements	52
+5	SCREEN SPECIFICATION	53
+5.1	Screen flow	53
+5.2	Wireframe	53
+6	REFERENCES	54
+
+
+OVERVIEW
+Purpose
+Tài liệu này mô tả chi tiết các yêu cầu phần mềm cho Hệ thống quản lý bán hàng của quán cà phê Bình Yên Là Nhà. Đối tượng đọc gồm:
+Nhóm xây dựng hệ thống
+Giảng viên môn học
+Chủ cửa hàng để xác nhận yêu cầu nghiệp vụ
+Mục tiêu là xác định các chức năng và yêu cầu phi chức năng cần có để xây dựng phần mềm giúp tối ưu các hoạt động quản lý bán hàng. 
+Business objectives
+Hiện tại, quán đang quản lý hoạt động bán hàng chủ yếu bằng ghi chép thủ công và Excel, gây khó khăn trong việc:
+Theo dõi và tra cứu các đơn hàng đã phát sinh.
+Tổng hợp doanh thu và đối chiếu tiền mặt, tiền chuyển khoản có thể xảy ra sai sót.
+Quản lý thông tin nhân viên và phân ca làm việc.
+So sánh doanh thu giữa các ngày, tuần, tháng và năm.
+Dự án ra đời nhằm chuyển đổi từ phương thức quản lý thủ công sang hệ thống điện tử, giúp cửa hàng:
+Quản lý đơn hàng, thanh toán, món, nhân viên và ca làm việc dễ dàng.
+Tự động tổng hợp và báo cáo doanh thu.
+Hỗ trợ tra cứu và theo dõi đơn hàng nhanh chóng.
+Giảm sai sót và thời gian xử lý do nhập liệu, tổng hợp thủ công.
+Quản lý theo dõi hoạt động trên máy tính và điện thoại.
+Hỗ trợ quản lý theo dõi và so sánh tình hình kinh doanh hiệu quả hơn.
+Scope
+Organization Scope: Áp dụng cho quy trình bán hàng của nhân viên và hoạt động quản lý của quản lý cho quán Bình Yên Là Nhà Coffee & Tea.
+User Scope: Dành cho đối tượng nhân viên và người quản lý.
+Functional Scope: Đăng nhập, Quản lý đơn hàng, Quản lý món, Quản lý doanh thu, Quản lý nhân viên, Quản lý tài khoản.
+Integration Scope: Hệ thống chưa thực hiện tích hợp trực tiếp với các nền tảng bên ngoài. Đơn hàng từ GrabFood và ShopeeFood được nhân viên nhập thủ công vào hệ thống.
+Out of scope:
+Quản lý thông tin khách hàng/ thành viên
+Tích điểm cho khách hàng
+Quản lý các chương trình khuyến mãi
+Quản lý kho, nguyên vật liệu
+Quản lý nhập, xuất hàng
+Quản lý nhà cung cấp
+In hóa đơn điện tử, hóa đơn giấy
+Quản lý sản xuất/pha chế (công thức, định lượng)
+Quản lý chấm công, tính lương
+Quản lý công nợ.
+OVERALL DESCRIPTION
+User requirements
+Business requirements
+Kiểm soát rủi ro và phân quyền chặt chẽ: Phân quyền nhân viên chỉ được nhập đơn và xác nhận thanh toán, riêng doanh thu, giá bán, danh mục món và nhân sự do quản lý kiểm soát.
+Tự động hóa báo cáo và theo dõi doanh thu: Tự động tổng hợp số liệu kinh doanh theo ngày, tuần, tháng, năm, tách rõ tiền mặt và chuyển khoản, thống kê món bán chạy, số đơn hủy.
+Mở rộng khả năng giám sát đa nền tảng: Hỗ trợ hệ thống chạy trên máy tính tại quán và thiết bị di động.
+Stakeholder requirements
+
+Business workflow
+
+Use case diagram
+
+FUNCTIONAL REQUIREMENTS
+Use Case Đăng nhập
+Cho phép Nhân viên hoặc Quản lý xác thực thông tin tài khoản để truy cập hệ thống và sử dụng các chức năng được phân quyền. Sau khi đăng nhập thành công, người dùng có thể thực hiện các nghiệp vụ. Nếu thông tin đăng nhập không hợp lệ, hệ thống báo lỗi và yêu cầu người dùng nhập lại.
+
+
+Use Case Quản lý đơn hàng
+Cho phép Nhân viên/Quản lý thực hiện các nghiệp vụ liên quan đến đơn hàng, bao gồm tạo đơn hàng mới, sửa thông tin đơn hàng và tra cứu đơn hàng đã được lưu trong hệ thống. Nhằm giúp quán ghi nhận đơn hàng kịp thời, giảm sai sót do ghi chép thủ công và thuận tiện cho việc kiểm tra lại thông tin giao dịch.
+
+Tạo đơn hàng
+
+
+Sửa thông tin đơn hàng
+
+
+Tra cứu đơn hàng
+
+
+Use Case Quản lý món
+Cho phép Nhân viên/Quản lý thực hiện các nghiệp vụ liên quan đến món, bao gồm tạo món mới, sửa thông tin món và tìm kiếm món đã được lưu trong hệ thống. Trong đó, Nhân viên chỉ được phép truy cập vào chức năng “Tìm kiếm món”.
+
+Thêm món
+
+
+
+Cập nhật thông tin món
+
+
+
+Tìm kiếm món
+
+
+
+Xóa món
+
+
+Use Case Quản lý doanh thu
+Cho phép Quản lý theo dõi tình hình kinh doanh của quán thông qua báo cáo doanh thu, số lượng đơn hàng, món bán chạy và số tiền thu được theo từng phương thức thanh toán. Quản lý có thể so sánh dữ liệu doanh thu giữa các khoảng thời gian để đánh giá tình hình kinh doanh của quán.
+
+Xem báo cáo doanh thu
+
+
+So sánh dữ liệu doanh thu
+
+
+Use Case Quản lý nhân viên
+Cho phép Quản lý quản lý nhân sự của quán, gồm hai use case con:
+5.1 Quản lý thông tin nhân viên -> Use case 5.1 tiếp tục được phân rã thành 5.1.1 Thêm nhân viên mới, 5.1.2 Sửa thông tin nhân viên và 5.1.3 Xóa nhân viên. Tác nhân sử dụng là Quản lý; Quản lý phải đăng nhập (use case 1) trước khi sử dụng chức năng này.
+5.2 Quản lý ca làm: cho phép Quản lý thiết lập lịch làm việc cho nhân viên. 
+
+Quản lý thông tin nhân viên
+Thêm nhân viên mới
+
+
+Sửa thông tin nhân viên
+
+
+Xóa nhân viên
+
+
+Quản lý ca làm
+
+Use Case Quản lý tài khoản
+Cho phép Quản lý quản lý cấp, điều chỉnh và thu hồi quyền truy cập hệ thống của nhân viên. Mỗi nhân viên được cấp một tài khoản riêng gắn với thông tin nhân viên đã có trong hệ thống. Vai trò của người đăng nhập tài khoản (Quản lý/Nhân viên) quyết định đến việc những chức năng nào người dùng được phép sử dụng, bảo đảm việc kiểm soát rủi ro và phân quyền chặt chẽ cho hệ thống.
+
+Tạo tài khoản
+
+Sửa thông tin tài khoản
+
+Xóa tài khoản
+
+Use Case Đăng xuất
+Cho phép Nhân viên/Quản lý kết thúc phiên làm việc sau khi sử dụng hệ thống. Sau khi đăng xuất, hệ thống kết thúc phiên đăng nhập hiện tại, chuyển về màn hình đăng nhập, ngăn người khác tiếp tục sử dụng phiên làm việc trước đó.
+
+
+NON-FUNCTIONAL REQUIREMENTS
+Performance requirements
+
+Usability requirements
+Operational requirements
+ 
+SCREEN SPECIFICATION
+Screen flow
+Đưa hình screen flow vào đây.
+REFERENCES
+
+
+=== TABLE ===
+Stakeholder	Requirement
+Nhân viên	Cần tạo đơn hàng, tra cứu đơn hàng, sửa thông tin đơn hàng chưa thanh toán
+Quản lý	Cần tạo đơn hàng, tra cứu đơn hàng, sửa thông tin đơn hàng
+Quản lý	Cần thêm, sửa, xóa, tìm kiếm thông tin món
+Quản lý	Cần thêm, sửa, xóa, xem thông tin nhân viên
+Quản lý	Cần xem báo cáo doanh thu ngày/tuần/tháng/năm
+Quản lý	Cần so sánh dữ liệu doanh thu giữa các ngày/tuần/tháng/năm
+Quản lý	Cần xem và thiết lập ca làm việc
+
+=== TABLE ===
+Use case ID | 	1
+Use case name | 	Đăng nhập
+Description | 	Là Nhân viên/Quản lý tôi muốn đăng nhập vào hệ thống
+Actors	Nhân viên/Quản lý
+Priority	High
+Triggers	Người dùng mở hệ thống
+Pre-conditions	Người dùng đã có tài khoản trong hệ thống | Hệ thống đang hoạt động và có thể tiếp nhận yêu cầu đăng nhập
+Post-conditions	Người dùng đăng nhập thành công | Hệ thống tạo phiên làm việc và xác định quyền truy cập theo vai trò
+Main flow	Người dùng truy cập vào hệ thống. | Hệ thống hiển thị màn hình đăng nhập. | Người dùng nhập “Tên đăng nhập và “Mật khẩu”. | Người dùng chọn “Đăng nhập”. | Hệ thống kiểm tra tính đầy đủ và hợp lệ của thông tin được cung cấp. | Hệ thống xác thực tài khoản và mật khẩu. | Hệ thống xác định vai trò và quyền hạn của người dùng. | Hệ thống tạo phiên đăng nhập và hiển thị giao diện phù hợp với quyền hạn.
+Alternative flows	N/A
+Exception flows	5a. Nếu thông tin đăng nhập không đầy đủ, hệ thống thông báo “Vui lòng nhập đầy đủ thông tin”. | UC quay lại bước 3 |  | 6a. Nếu Tên đăng nhập hoặc Mật khẩu không chính xác, hệ thống hiển thị thông báo “Tên đăng nhập hoặc mật khẩu sai!”. | UC quay lại bước 3 |  | 6b. Nếu tài khoản bị khóa, hệ thống thông báo “Tài khoản này đã bị khóa. Không thể đăng nhập!”. | UC quay lại bước 3
+Business rules	BR01. Trường “Tên đăng nhập” và “Mật khẩu” không được để trống
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	2.1
+Use case name | 	Tạo đơn hàng
+Description | 	Là Nhân viên/Quản lý tôi muốn tạo đơn hàng mới
+Actors	Nhân viên/Quản lý
+Priority	High
+Triggers	Người dùng bấm nút “Tạo đơn” trong mục “Quản lý đơn hàng”.
+Pre-conditions	Người dùng đã đăng nhập thành công vào hệ thống. | Danh sách món và giá bán đã được thiết lập trong hệ thống.
+Post-conditions	Đơn hàng được lưu vào hệ thống với thông tin các món, số lượng, đơn giá, tổng tiền và trạng thái thanh toán tương ứng.
+Main flow	Người dùng chọn mục “Quản lý đơn hàng”. | Hệ thống hiển thị “Danh sách đơn hàng”, gồm: “MÃ ĐƠN”, “THỜI GIAN TẠO”, “TỔNG THANH TOÁN”, “PHƯƠNG THỨC”(Tiền mặt/Chuyển khoản), “TRẠNG THÁI”(Đã thanh toán/Chưa thanh toán), “MÃ NHÂN VIÊN”, “TỔNG TIỀN”, “GIẢM GIÁ”, “NGUỒN ĐƠN HÀNG(Trực tiếp/GrabFood/ShopeeFood; mặc định hiển thị “Trực tiếp”), “TRẠNG THÁI ĐƠN”(Đang thực hiện/Hoàn thành/Hủy; “mặc định hiển thị “Đang thực hiện”), “GHI CHÚ”. | Người dùng bấm nút “Tạo đơn”. | Hệ thống hiển thị màn hình tạo đơn hàng, gồm có: | Khung chọn món, chứa Mã món, Tên món, Giá bán của tất cả các món trong danh sách món. | Thông tin của đơn hàng gồm có: “Nguồn đơn  hàng”(GrabFood/ShopeeFood/Trực tiếp), “Phương thức thanh toán”, “Trạng thái thanh toán”, “Tổng tiền”, “Giảm giá”, “Tổng thanh toán”, “Ghi chú”. | Thông tin chi tiết của đơn hàng gồm có: “Mã món”, “Tên món”, “Số lượng”, “Đơn Giá”, “Thành tiền” | Người dùng chọn món từ danh sách. | Hệ thống thêm món được chọn vào danh sách món của đơn hàng. | Người dùng nhập số lượng cho món đã chọn. | Hệ thống tính thành tiền của món theo số lượng và đơn giá, sau đó cập nhật tổng tiền đơn hàng. | Người dùng tiếp tục chọn món và nhập số lượng nếu muốn thêm các món khác. | Hệ thống cập nhật danh sách món và tổng tiền tương ứng. | Người dùng chọn “Nguồn đơn hàng” là “Trực tiếp” | Người dùng chọn “Phương thức thanh toán” là “Tiền mặt” và “Trạng thái thanh toán” là “Đã thanh toán” và bấm “Lưu” | Hệ thống lưu thông tin đơn hàng vào cơ sở dữ liệu. | Hệ thống hiển thị thông báo “Tạo đơn hàng thành công!”. | Hệ thống hiển thị lại màn hình Tạo đơn hàng với biểu mẫu trống (để sẵn sàng tạo đơn hàng tiếp theo).
+Alternative flows	11a. Người dùng chọn “Nguồn đơn hàng” là “GrabFood” hoặc “ShopeeFood”. | 11a1. Người dùng chọn “Trạng thái thanh toán” là “Đã thanh toán” | UC tiếp tục bước 13 |  | 12a. Người dùng chọn phương thức thanh toán “QR code” | 12a1. Người dùng chọn “Trạng thái thanh toán” là “Đã thanh toán” và bấm “Lưu” | 12a2. Hệ thống lưu đơn hàng vào CSDL. | UC tiếp tục bước 14
+Exception flows	5a. Nếu món đã ngừng kinh doanh, hệ thống hiển thị thông báo “Món đã ngừng kinh doanh. Vui lòng chọn món khác!”. |  | 7a. Nếu người dùng bỏ trống trường “Số lượng”, hệ thống hiển thị thông báo “Vui lòng nhập số lượng!” ngay dưới trường “Số lượng”. |  | 7b. Nếu người dùng nhập số lượng bằng 0, số âm, số thập phân hoặc ký tự không phải số, hệ thống hiển thị thông báo “Số lượng phải là số nguyên lớn hơn 0!” ngay dưới trường “Số lượng”. |  | 13a. Nếu hệ thống gặp lỗi cơ sở dữ liệu hoặc mất kết nối trong quá trình lưu đơn hàng, hệ thống hiển thị thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”.
+Business rules	BR01. “Số lượng” không được bỏ trống và phải là số nguyên lớn hơn 0.
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	2.2
+Use case name | 	Sửa thông tin đơn hàng
+Description | 	Là Nhân viên/Quản lý tôi muốn sửa thông tin đơn hàng để điều chỉnh các thông tin chưa chính xác. Đối với đơn hàng đã thanh toán, Nhân viên không được phép chỉnh sửa.
+Actors	Nhân viên/Quản lý
+Priority	High
+Triggers	Người dùng bấm “Sửa” trong mục “Quản lý đơn hàng”.
+Pre-conditions	Người dùng đã đăng nhập thành công vào hệ thống. | Đơn hàng cần sửa đã tồn tại trong hệ thống.
+Post-conditions	Thông tin đơn hàng được cập nhật và lưu vào hệ thống.
+Main flow	Người dùng chọn mục “Quản lý đơn hàng”. | Hệ thống hiển thị “Danh sách đơn hàng”, gồm: “MÃ ĐƠN”, “THỜI GIAN TẠO”, “TỔNG THANH TOÁN”, “PHƯƠNG THỨC”(Tiền mặt/Chuyển khoản), “TRẠNG THÁI”(Đã thanh toán/Chưa thanh toán), “MÃ NHÂN VIÊN”, “TỔNG TIỀN”, “GIẢM GIÁ”, “NGUỒN ĐƠN HÀNG(Trực tiếp/GrabFood/ShopeeFood; mặc định hiển thị “Trực tiếp”), “TRẠNG THÁI ĐƠN”(Đang thực hiện/Hoàn thành/Hủy; “mặc định hiển thị “Đang thực hiện”), “GHI CHÚ”. | Người dùng bấm nút “Xem” một đơn hàng | Hệ thống hiển thị thông tin của đơn hàng ở trên và các thông tin chi tiết của đơn hàng ở dưới: | Thông tin của đơn hàng gồm có: “Mã đơn hàng”, “Mã nhân viên”, “Thời gian tạo”, “Nguồn đơn hàng”(GrabFood/ShopeeFood/Trực tiếp), “Phương thức thanh toán”, “Trạng thái thanh toán”, “Trạng thái đơn hàng”, “Tổng tiền”, “Giảm giá”, “Tổng thanh toán”, “Ghi chú”. | Thông tin chi tiết của đơn hàng gồm có: “Mã món”, “Tên món”, “Số lượng”, “Đơn Giá”, “Thành tiền” | Hệ thống kiểm tra “Trạng thái thanh toán” của đơn và “Vai trò” của tài khoản đang đăng nhập | Người dùng bấm nút “Chỉnh sửa” | Người dùng chọn và chỉnh sửa các mục cần sửa rồi bấm nút “Lưu”. | Hệ thống kiểm tra tính hợp lệ của thông tin sau khi chỉnh sửa. | Hệ thống cập nhật lại “Tổng tiền”, “Tổng thanh toán” của đơn hàng. | Hệ thống lưu thông tin đơn hàng đã được cập nhật. | Hệ thống hiển thị thông báo “Cập nhật đơn hàng thành công!”. | Hệ thống hiển thị lại thông tin đơn hàng sau khi cập nhật thành công.
+Alternative flows	N/A
+Exception flows	5a. Nếu “Trạng thái thanh toán” là “Đã thanh toán” và “Vai trò” của tài khoản đang đăng nhập là “Nhân viên” thì hệ thống ẩn nút “Sửa”. | UC kết thúc |  | 8a. Nếu người dùng nhập số lượng bằng 0, số âm, số thập phân hoặc ký tự không phải số, hệ thống hiển thị thông báo “Số lượng phải là số nguyên lớn hơn 0!” ngay dưới trường “Số lượng”. |  | 8b. Nếu món được thêm vào đơn hàng đã “Ngừng bán”, hệ thống hiển thị thông báo “Món đã ngừng kinh doanh!”
+Business rules	BR01. “Số lượng” phải là số nguyên lớn hơn 0. | BR02. Nhân viên không được quyền chỉnh sửa đơn hàng đã thanh toán
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	2.3
+Use case name | 	Tra cứu đơn hàng
+Description | 	Là Nhân viên/Quản lý tôi muốn tra cứu những đơn hàng đã phát sinh
+Actors	Nhân viên/Quản lý
+Priority	High
+Triggers	Người dùng chọn chức năng “Tra cứu đơn hàng” trong mục “Quản lý đơn hàng”.
+Pre-conditions	Người dùng đã đăng nhập thành công vào hệ thống. 
+Post-conditions	Hệ thống hiển thị danh sách đơn hàng được tìm thấy và thông tin chi tiết của đơn hàng
+Main flow	Người dùng chọn chức năng “Tra cứu đơn hàng”. | Hệ thống hiển thị “Danh sách đơn hàng”, gồm: “MÃ ĐƠN HÀNG”, “MÃ NHÂN VIÊN”, “THỜI GIAN TẠO”,  “NGUỒN ĐƠN HÀNG” (Trực tiếp/GrabFood/ShopeeFood), “PHƯƠNG THỨC THANH TOÁN”, “TRẠNG THÁI THANH TOÁN”, “TRẠNG THÁI ĐƠN HÀNG”, “TỔNG TIỀn”, “GIẢM GIÁ”, “TỔNG THANH TOÁN”, “GHI CHÚ”. | Người dùng nhập mã đơn hàng cần tra cứu vào ô “Nhập mã đơn cần tìm” | Người dùng bấm nút “Tìm kiếm”. | Hệ thống hiển thị đơn hàng phù hợp với điều kiện tìm kiếm. | Người dùng chọn đơn hàng cần xem chi tiết. | Hệ thống hiển thị thông tin chi tiết của đơn hàng, gồm có: “Mã đơn hàng”, “Mã món”, “Tên món”, “Số lượng”, “Đơn giá”, “Thành tiền”.
+Alternative flows	N/A
+Exception flows	5a. Nếu không tồn tại đơn hàng có mã tương ứng, hệ thống hiển thị thông báo “Không tìm thấy đơn hàng”. | UC quay lại bước 3
+Business rules	N/A
+Non-functional requirement	NFR01. Danh sách đơn hàng hiển thị dạng grid.
+
+=== TABLE ===
+Use case ID | 	3.1
+Use case name | 	Thêm món
+Description | 	Là Quản lý, tôi muốn thêm món mới vào danh sách món của quán.
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng bấm nút “Thêm món” trong mục “Quản lý món”.
+Pre-conditions	Người dùng đã đăng nhập thành công vào hệ thống
+Post-conditions	Món mới được lưu vào hệ thống
+Main flow	Người dùng chọn mục “Quản lý món”. | Hệ thống hiển thị màn hình Quản lý món, gồm các mục: “Tìm kiếm”, “Thêm món”, bảng “Danh sách món” bao gồm “MÃ MÓN”, “TÊN MÓN”, “GIÁ BÁN”, “TRẠNG THÁI”(Đang bán/Ngừng bán), THAO TÁC(Sửa/Xóa). | Người dùng bấm nút “Thêm món”. | Hệ thống hiển thị biểu mẫu mới cho phép nhập dữ liệu ở trường “MÃ MÓN” và “TÊN MÓN”.  | Người dùng nhập “TÊN MÓN”. | Người dùng nhập “GIÁ BÁN”. | Người dùng bấm nút “Lưu”. | Hệ thống lưu thông tin món mới vào cơ sở dữ liệu. | Hệ thống hiển thị thông báo “Thêm món thành công!”. | Hệ thống hiển thị lại màn hình Thêm món với biểu mẫu trống để sẵn sàng thêm món tiếp theo.
+Alternative flows	7a. Người dùng bấm nút “Hủy” | 7a1. Hệ thống quay về màn hình Quản lý món ban đầu | UC kết thúc
+Exception flows	5a. Nếu người dùng bỏ trống trường “TÊN MÓN”, hệ thống hiển thị thông báo “Vui lòng nhập tên món!” ngay dưới trường “TÊN MÓN”. |  | 6a. Nếu người dùng bỏ trống trường “GIÁ BÁN”, hệ thống hiển thị thông báo “Vui lòng nhập giá bán!” ngay dưới trường “GIÁ BÁN”. |  | 6b. Nếu người dùng nhập giá bán không phải là kí tự số hoặc giá bán nhỏ hơn 0, hệ thống hiển thị thông báo “Giá bán phải là số lớn hơn 0!” ngay dưới trường “GIÁ BÁN” |  | 8a. Nếu hệ thống gặp lỗi cơ sở dữ liệu hoặc mất kết nối trong quá trình lưu thông tin món, hệ thống hiển thị thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”. | UC kết thúc
+Business rules	BR01. Trường “TÊN MÓN” không được bỏ trống. | BR02. Trường “GIÁ BÁN” không được bỏ trống và phải là số lớn hơn 0.
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	3.2
+Use case name | 	Cập nhật thông tin món
+Description | 	Là Quản lý, tôi muốn cập nhật thông tin món để điều chỉnh thông tin hoặc giá bán của các món đang được quản lý trong hệ thống.
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng bấm nút “Sửa” trong mục “Quản lý món”.
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Món cần cập nhật đã tồn tại trong hệ thống.
+Post-conditions	Thông tin món được cập nhật và lưu vào hệ thống.
+Main flow	Người dùng chọn mục “Quản lý món”. | Người dùng bấm nút “Sửa” ở món muốn sửa. | Hệ thống hiển thị các ô nhập dữ liệu ở món vừa chọn, gồm “TÊN MÓN”, “GIÁ BÁN”, “TRẠNG THÁI”(Đang bán/Ngừng bán). | Người dùng chỉnh sửa thông tin cần thay đổi. | Người dùng bấm nút “Lưu”. | Hệ thống lưu thông tin món đã được cập nhật vào cơ sở dữ liệu. | Hệ thống hiển thị thông báo “Cập nhật thông tin món thành công!” và hiển thị lại thông tin món sau khi cập nhật thành công.
+Alternative flows	5a. Người dùng bấm nút “Hủy” | 5a1. Hệ thống quay về màn hình Quản lý món ban đầu | UC kết thúc
+Exception flows	4a. Nếu người dùng xóa tên món hiện tại nhưng không nhập tên mới, hệ thống hiển thị thông báo “Vui lòng nhập tên món!” ngay dưới trường “Tên món”. |  | 4b. Nếu người dùng bỏ trống trường “GIÁ BÁN”, hệ thống hiển thị thông báo “Vui lòng nhập giá bán!” ngay dưới trường “GIÁ BÁN”. |  | 4c. Nếu người dùng nhập giá bán không phải là số hoặc giá bán nhỏ hơn hoặc bằng 0, hệ thống hiển thị thông báo “Giá bán phải là số lớn hơn 0!” ngay dưới trường “GIÁ BÁN”. |  | 6a. Nếu hệ thống gặp lỗi cơ sở dữ liệu hoặc mất kết nối trong quá trình lưu thông tin món, hệ thống hiển thị thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”.
+Business rules	BR01. Trường “GIÁ BÁN” không được bỏ trống và phải là số lớn hơn hoặc bằng 0.
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	3.3
+Use case name | 	Tìm kiếm món
+Description | 	Là Nhân viên/Quản lý, tôi muốn tìm kiếm món để nhanh chóng tra cứu thông tin món trong hệ thống.
+Actors	Nhân viên/Quản lý
+Priority	High
+Triggers	Người dùng chọn “Tìm kiếm” trong mục “Quản lý món”.
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Danh sách món đã có dữ liệu trong hệ thống.
+Post-conditions	Hệ thống hiển thị danh sách món phù hợp với thông tin tìm kiếm.
+Main flow	Người dùng chọn mục “Quản lý món”. | Người dùng nhập tên món vào ô “Nhập tên món cần tìm”  | Người dùng bấm nút “Tìm kiếm”. | Hệ thống hiển thị danh sách món phù hợp với điều kiện tìm kiếm (không phân biệt chữ hoa/thường và dấu), bao gồm “MÃ MÓN”, “TÊN MÓN”, “GIÁ BÁN”, “TRẠNG THÁI” của các món tìm được.
+Alternative flows	N/A
+Exception flows	3a. Nếu người dùng bỏ trống ô “Nhập tên món cần tìm”, hệ thống hiển thị thông báo “Vui lòng nhập tên món cần tìm!” ngay dưới trường “Tên món”. | 3a. Nếu hệ thống không tìm thấy món phù hợp với thông tin tìm kiếm, hệ thống hiển thị thông báo “Không tìm thấy món!”.
+Business rules	N/A
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	3.4
+Use case name | 	Xóa món
+Description | 	Là Quản lý, tôi muốn xóa món khỏi danh sách món trong hệ thống.
+Actors	Quản lý
+Priority	Medium
+Triggers	Người dùng bấm nút “Xóa” trong mục “Quản lý món”.
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Món cần xóa đã tồn tại trong hệ thống.
+Post-conditions	Món được xóa khỏi danh sách món
+Main flow	Người dùng chọn mục “Quản lý món”. | Người dùng bấm nút “Xóa” ở món muốn xóa. | Hệ thống hiển thị thông báo xác nhận “Bạn có chắc chắn muốn xóa món này không?”, nút “Hủy”, “Chuyển trạng thái ngừng bán” và “Xác nhận”. | Người dùng bấm nút “Xác nhận”. | Hệ thống thực hiện xóa món được chọn khỏi hệ thống. | Hệ thống hiển thị thông báo “Xóa món thành công!” và hiển thị lại danh sách món sau khi xóa.
+Alternative flows	4a. Người dùng bấm nút “Hủy” | 4a1. Hệ thống quay về màn hình Quản lý món ban đầu | UC kết thúc |  | 4b. Người dùng bấm nút “Chuyển trạng thái ngừng bán”. | 4b1. Hệ thống lưu trạng thái vào CSDL. | 4b2. Hệ thống hiển thị thông báo “Đã chuyển trạng thái của món thành Ngừng bán”. | UC kết thúc
+Exception flows	5a. Nếu hệ thống gặp lỗi cơ sở dữ liệu hoặc mất kết nối trong quá trình xóa món, hệ thống hiển thị thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”.
+Business rules	N/A
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	4.1
+Use case name | 	Xem báo cáo doanh thu
+Description | 	Là Quản lý, tôi muốn xem báo cáo doanh thu để theo dõi tình hình kinh doanh của quán
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng chọn mục “Báo cáo doanh thu” trong mục “Quản lý doanh thu”
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Hệ thống có dữ liệu đơn hàng để tổng hợp báo cáo.
+Post-conditions	Hệ thống hiển thị báo cáo doanh thu theo khoảng thời gian người dùng đã chọn.
+Main flow	Người dùng chọn mục “Quản lý doanh thu”. | Hệ thống hiển thị màn hình Báo cáo doanh thu, gồm có: Nút chọn Khoảng thời gian(Ngày/Tuần/Tháng/Năm), “Ngày bắt đầu”, “Ngày kết thúc” và nút “Xem báo cáo”. | Người dùng chọn xem theo Ngày/Tuần/Tháng/Năm (mặc định chọn Ngày) | Người dùng chọn khoảng thời gian “Ngày bắt đầu” và “Ngày kết thúc” bằng khung chọn lịch (mặc định chọn bắt đầu và kết thúc tháng hiện tại). | Người dùng bấm nút “Xem báo cáo”. | Hệ thống hiển thị “Tổng doanh thu”, “Số đơn hàng”, “Tiền mặt, “Chuyển khoản”, các “Món bán chạy”, và một “Biểu đồ doanh thu”.
+Alternative flows	N/A
+Exception flows	5a. Nếu “Ngày bắt đầu” lớn hơn “Ngày kết thúc”, hệ thống thông báo “Ngày bắt đầu không được lớn hơn ngày kết thúc!”. | 5b. Nếu hệ thống gặp lỗi trong quá trình truy xuất hoặc tổng hợp dữ liệu, hệ thống hiển thị thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”.
+Business rules	BR01. “Ngày bắt đầu” không được lớn hớn “Ngày kết thúc”.
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	4.2
+Use case name | 	So sánh dữ liệu doanh thu
+Description | 	Là Quản lý, tôi muốn xem so sánh dữ liệu doanh thu giữa các khoảng thời gian
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng chọn mục “So sánh doanh thu” trong mục “Quản lý doanh thu”
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Hệ thống có dữ liệu đơn hàng để thực hiện so sánh.
+Post-conditions	Hệ thống hiển thị dữ liệu doanh thu của các khoảng thời gian được chọn và kết quả so sánh tương ứng
+Main flow	Người dùng chọn mục “Quản lý doanh thu”. | Người dùng chọn mục “So sánh doanh thu”. | Hệ thống hiển thị khung “Thiết lập khoảng thời gian”, bao gồm “Kỳ 1 · Từ ngày”, “Đến ngày”, “Kỳ 2 · Từ ngày”, “Đến ngày”, và nút “So sánh”. | Người dùng chọn khoảng thời gian kỳ 1 bằng khung chọn lịch | Người dùng chọn khoảng thời gian kỳ 2 bằng khung chọn lịch | Người dùng bấm nút “So sánh”. | Hệ thống hiển thị dữ liệu so sánh, bao gồm: tổng doanh thu kỳ 1, tổng doanh thu kỳ 2, “Chênh lệch”, và tỉ lệ “Tăng trưởng”.
+Alternative flows	N/A
+Exception flows	6a. Nếu người dùng bỏ trống các mốc thời gian, hệ thống hiển thị thông báo  | 6c. Nếu ngày bắt đầu lớn hơn ngày kết thúc ở một trong hai khoảng thời gian, hệ thống hiển thị thông báo “Ngày bắt đầu không được lớn hơn ngày kết thúc!”. | 6d. Nếu hệ thống không có dữ liệu doanh thu trong một hoặc cả hai khoảng thời gian được chọn, hệ thống hiển thị thông báo “Không có đủ dữ liệu doanh thu để thực hiện so sánh!”. | 6e. Nếu hệ thống gặp lỗi trong quá trình truy xuất hoặc tổng hợp dữ liệu, hệ thống hiển thị thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”.
+Business rules	BR01. Mức chênh lệch doanh thu tính bằng doanh thu kỳ thứ hai trừ doanh thu kỳ thứ nhất. | BR02. Tỉ lệ tăng trưởng tính bằng doanh thu kỳ thứ hai chia doanh thu kỳ thứ nhất.
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	5.1.1
+Use case name | 	Thêm nhân viên mới
+Description | 	Là Quản lý, tôi muốn thêm thông tin nhân viên mới vào hệ thống của quán
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng chọn chức năng “Thêm nhân viên mới” trong mục “Quản lý thông tin nhân viên”
+Pre-conditions	Người dùng đã đăng nhập thành công vào hệ thống
+Post-conditions	Thông tin nhân viên mới được lưu vào hệ thống
+Main flow	Người dùng chọn mục “Quản lý nhân viên”. | Hệ thống hiển thị các mục “Quản lý thông tin nhân viên” và “Quản lý ca làm”; màn hình Quản lý thông tin nhân viên, bao gồm: nút “Thêm nhân viên”, danh sách nhân viên: “MÃ NV”, “TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”, “ĐỊA CHỈ”, “NGÀY VÀO LÀM”, “TRẠNG THÁI”, “THAO TÁC”(cho phép Sửa/Xóa). | Người dùng bấm nút “Thêm nhân viên”. | Hệ thống hiển thị biểu mẫu mới cho phép nhập dữ liệu ở trường “TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”, “ĐỊA CHỈ”, “NGÀY VÀO LÀM”, “TRẠNG THÁI”. | Người dùng nhập thông tin nhân viên mới vào các ô ở trên. | Người dùng bấm nút “Lưu”. | Hệ thống kiểm tra tính hợp lệ của thông tin nhân viên. | Hệ thống lưu thông tin nhân viên vào CSDL. | Hệ thống hiển thị thông báo “Thêm nhân viên thành công!”. | Hệ thống hiển thị lại màn hình Thêm nhân viên mới với biểu mẫu trống để sẵn sàng thêm nhân viên tiếp theo.
+Alternative flows	N/A
+Exception flows	7a. Nếu người dùng bỏ trống trường “TÊN NHÂN VIÊN” hoặc “SỐ ĐIỆN THOẠI”, hệ thống hiển thị thông báo “Vui lòng nhập đầy đủ thông tin!”. |  | 7a. Nếu “SỐ ĐIỆN THOẠI” nhập vào trùng với số của một nhân viên đã tồn tại trong hệ thống thì hệ thống hiển thị thông báo “Thông tin nhân viên không hợp lệ. Vui lòng kiểm tra lại!”. |  | 8a. Nếu lưu không thành công, hệ thống hiển thị thông báo "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!" và kết thúc.
+Business rules	BR01. Trường “TÊN NHÂN VIÊN” và “SỐ ĐIỆN THOẠI” không được bỏ trống
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	5.1.2
+Use case name | 	Sửa thông tin nhân viên
+Description | 	Là Quản lý, tôi muốn sửa thông tin của nhân viên để cập nhật các thông tin cần thay đổi hoặc chưa chính xác
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng bấm nút “Sửa” trong mục “Quản lý thông tin nhân viên”
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Nhân viên cần sửa đã tồn tại trong hệ thống.
+Post-conditions	Thông tin nhân viên được cập nhật và lưu vào hệ thống
+Main flow	Người dùng chọn mục “Quản lý nhân viên”. | Hệ thống hiển thị các mục “Quản lý thông tin nhân viên” và “Quản lý ca làm”; màn hình Quản lý thông tin nhân viên, bao gồm: nút “Thêm nhân viên”, danh sách nhân viên: “MÃ NV”, “TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”, “ĐỊA CHỈ”, “NGÀY VÀO LÀM”, “TRẠNG THÁI”(Còn làm/Nghỉ làm), “THAO TÁC”(cho phép Sửa/Xóa). | Người dùng bấm nút “Sửa” ở nhân viên muốn sửa. | Hệ thống hiển thị các ô nhập dữ liệu ở nhân viên vừa chọn, gồm “TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”, “ĐỊA CHỈ”, “NGÀY VÀO LÀM”, “TRẠNG THÁI”. | Người dùng chỉnh sửa thông tin cần thay đổi. | Người dùng bấm nút “Lưu”. | Hệ thống kiểm tra tính hợp lệ của thông tin sau khi chỉnh sửa. | Hệ thống lưu thông tin nhân viên đã cập nhật vào cơ sở dữ liệu. | Hệ thống hiển thị thông báo “Cập nhật thông tin nhân viên thành công!”. | Hệ thống hiển thị lại thông tin nhân viên sau khi cập nhật thành công.
+Alternative flows	N/A
+Exception flows	7a. Nếu người dùng xóa nội dung của một trường thông tin bắt buộc (“TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”) nhưng không nhập giá trị thay thế, hệ thống hiển thị thông báo “Vui lòng nhập đầy đủ thông tin bắt buộc!” tại trường tương ứng. |  | 7b. Nếu “SỐ ĐIỆN THOẠI” nhập vào trùng với số của một nhân viên đã tồn tại trong hệ thống thì hệ thống hiển thị thông báo “Thông tin nhân viên không hợp lệ. Vui lòng kiểm tra lại!”. |  | 8a. Nếu lưu không thành công, hệ thống hiển thị thông báo "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!".
+Business rules	BR01. Trường “TÊN NHÂN VIÊN” và “SỐ ĐIỆN THOẠI” không được bỏ trống
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	5.1.3
+Use case name | 	Xóa nhân viên
+Description | 	Là Quản lý, tôi muốn xóa nhân viên khỏi danh sách nhân viên
+Actors	Quản lý
+Priority	Medium
+Triggers	Người dùng bấm nút “Xóa” trong mục “Quản lý nhân viên”
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Nhân viên cần xóa đã tồn tại trong hệ thống.
+Post-conditions	Nhân viên được xóa khỏi danh sách nhân viên
+Main flow	Người dùng chọn chức năng “Quản lý nhân viên”. | Hệ thống hiển thị các mục “Quản lý thông tin nhân viên” và “Quản lý ca làm”; màn hình Quản lý thông tin nhân viên, bao gồm: nút “Thêm nhân viên”, danh sách nhân viên: “MÃ NV”, “TÊN NHÂN VIÊN”, “SỐ ĐIỆN THOẠI”, “ĐỊA CHỈ”, “NGÀY VÀO LÀM”, “TRẠNG THÁI”(Còn làm/Nghỉ làm), “THAO TÁC”(cho phép Sửa/Xóa). | Người dùng bấm nút “Xóa” ở nhân viên muốn xóa | Hệ thống hiển thị hộp thoại xác nhận “Bạn có chắc chắn muốn xóa nhân viên này không?”, nút “Hủy”, “Chuyển trạng thái thành nghỉ làm”, “Xác nhận”. | Người dùng bấm nút “Xác nhận”. | Hệ thống thực hiện xóa nhân viên được chọn khỏi hệ thống. | Hệ thống hiển thị thông báo “Xóa nhân viên thành công!”. | Hệ thống hiển thị lại danh sách nhân viên sau khi xóa thành công.
+Alternative flows	5a. Người dùng bấm nút “Hủy”. | 5a1. Hệ thống quay lại danh sách nhân viên và kết thúc |  | 5b. Người dùng bấm nút “Chuyển trạng thái thành nghỉ làm”. | 5b1. Hệ thống hiển thị thông báo “Đã chuyển trạng thái thành Nghỉ làm” | 5b2. Hệ thống lưu trạng thái vào CSDL. | 5b3. Hệ thống quay lại danh sách nhân viên và kết thúc.
+Exception flows	6a. Nếu hệ thống gặp lỗi cơ sở dữ liệu hoặc mất kết nối trong quá trình xóa nhân viên, hệ thống hiển thị thông báo “Đã xảy ra lỗi!”. | UC kết thúc.
+Business rules	N/A
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	5.2
+Use case name | 	Quản lý ca làm
+Description | 	Là Quản lý, tôi muốn xem, lập và điều chỉnh lịch làm việc của nhân viên theo ca, ngày, tuần hoặc tháng
+Actors	Quản lý
+Priority	High
+Triggers	Quản lý chọn mục “Quản lý ca làm” trong mục “Quản lý nhân viên”
+Pre-conditions	Quản lý đã đăng nhập thành công vào hệ thống.
+Post-conditions	Lịch làm việc được hiển thị hoặc thông tin phân công ca làm được lưu và cập nhật trong hệ thống.
+Main flow	Người dùng chọn mục “Quản lý ca làm”. | Hệ thống hiển thị màn hình Quản lý ca làm, gồm có: “Danh sách ca làm”: “MÃ NHÂN VIÊN”, “TÊN NHÂN VIÊN”, “MÃ CA LÀM”, “NGÀY LÀM”, “GIỜ BẮT ĐẦU”, “GIỜ KẾT THÚC”, “TRẠNG THÁI”(Được phân công/Đã đổi/Hủy); Nút chọn “Ngày”, “Tháng”, “Năm” dùng để xem lịch làm việc theo từng kiểu thời gian; Nút bấm chọn lịch (mặc định hiển thị ngày hiện tại); Nút “Lập lịch làm việc”. | Người dùng bấm nút “Lập lịch làm việc” | Hệ thống hiển thị form “Lập lịch làm việc”, gồm có: “Thời gian lập lịch”(radio button: Một ngày/Khoảng thời gian), “Từ ngày”(khung chọn lịch), “Đến ngày”(khung chọn lịch), “Ca làm”, “Giờ bắt đầu”, “Giờ kết thúc”, “Nhân viên phân công”(hiển thị mã và tên nhân viên, cho phép chọn 1 hoặc nhiều); nút “Hủy” và “Xác nhận”. | Người dùng chọn ngày hoặc khoảng thời gian cần lập lịch. | Người dùng chọn ca làm và thiết lập thời gian bắt đầu, kết thúc của ca. | Người dùng chọn nhân viên cần phân công vào ca làm. | Người dùng bấm nút “Xác nhận”. | Hệ thống kiểm tra tính hợp lệ của thông tin lịch làm việc. | Hệ thống lưu lịch làm việc và thông tin phân công nhân viên. | Hệ thống thông báo “Lập lịch làm việc thành công” và hiển thị lịch làm việc đã cập nhật.
+Alternative flows	3a. Người dùng chọn một ca làm đã được phân công trong lịch làm việc. | 3a1. Hệ thống hiển thị thông tin ca làm và danh sách nhân viên đã được phân công. | 3a2. Người dùng chỉnh sửa thời gian làm việc hoặc nhân viên được phân công. | 3a3. Người dùng chọn “Xác nhận”. | 3a4. Hệ thống kiểm tra tính hợp lệ của thông tin sau khi sửa. | 3a5. Hệ thống lưu thông tin cập nhật. | 3a6. Hệ thống thông báo “Đã sửa thành công” và hiển thị lịch làm việc mới. | UC kết thúc |  | 3b. Người dùng bấm nút “Tuần” | 3b1. Hệ thống hiển thị Lịch làm việc của tuần đã chọn, gồm có: “CA LÀM”: CA<mãCa> · Ca <sáng/chiều/tối> | <giờ bắt đầu – giờ kết thúc>; | Các cột hiển thị các ngày trong tuần từ “THỨ HAI” đến “CHỦ NHẬT” và tên các nhân viên được phân công theo mỗi ca. |  | 3c. Người dùng bấm nút “Tháng” | 3c1. Hệ thống hiển thị Lịch làm việc của tháng đã chọn, gồm có: | Khung lịch các ngày trong tháng, ngày đầu tuần là “THỨ HAI”; mỗi ô chứa số ngày theo lịch, số ca trong ngày đó và số lượt phân công. | 
+Exception flows	9a. Nếu Quản lý chưa chọn ngày hoặc khoảng thời gian cần lập lịch, hệ thống thông báo “Vui lòng chọn thời gian cần lập lịch!”. |  | 9b. Nếu thời gian bắt đầu hoặc kết thúc không hợp lệ, hệ thống thông báo “Thời gian không hợp lệ. Vui lòng nhập lại!”. |  | 9c. Nếu chưa có nhân viên nào được chọn cho ca làm, hệ thống thông báo “Chưa có nhân viên nào được chọn!”. |  | 9d. Nếu nhân viên được chọn đã có lịch làm trùng với ca đang lập, hệ thống thông báo “Lịch làm việc bị trùng!”. |  | 10a. Nếu hệ thống không thể lưu lịch làm việc, hệ thống thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”.
+Business rules	BR01. Lịch làm việc phải phù hợp với thời gian hoạt động của quán, hiện tại từ 7:00 đến 22:00.
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	6.1
+Use case name | 	Tạo tài khoản
+Description | 	Là quản lý, tôi muốn tạo tài khoản đăng nhập cho nhân viên để họ có thể đăng nhập và sử dụng hệ thống theo quyền được cấp
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng bấm nút "Tạo tài khoản" trong mục “Quản lý tài khoản”
+Pre-conditions	•  Người dùng đã đăng nhập thành công với vai trò "Quản lý" | •  Tài khoản cần sửa đã tồn tại trong hệ thống
+Post-conditions	•  Tài khoản mới được lưu vào hệ thống với trạng thái "Hoạt động"
+Main flow	Người dùng chọn mục “Quản lý tài khoản”. | Hệ thống hiển thị màn hình “Quản lý tài khoản”, gồm: nút “Tạo tài khoản”, bảng “Danh sách tài khoản” gồm các trường: “MÃ TÀI KHOẢN”, “TÊN ĐĂNG NHẬP”, “MẬT KHẨU”, “MÃ NHÂN VIÊN”, “VAI TRÒ”, “TRẠNG THÁI”, “THAO TÁC”(Sửa/Xóa). | Người dùng bấm nút "Tạo tài khoản". | Hệ thống hiển thị form “Tạo tài khoản”, gồm: | “Tên đăng nhập”, | “Mật khẩu”, | “Mã nhân viên”, | “Vai trò”(Nhân viên/Quản lý), | “Trạng thái”(Hoạt động/Khóa; mặc định là Hoạt động); | nút “Hủy” và nút “Tạo” | Người dùng nhập “Tên đăng nhập”, “Mật khẩu” và chọn “Vai trò”, chọn “Mã nhân viên” | Người dùng bấm nút "Tạo". | Hệ thống kiểm tra tính hợp lệ của thông tin. | Hệ thống lưu thông tin vào cơ sở dữ liệu. | Hệ thống hiển thị thông báo "Tạo tài khoản thành công". | Hệ thống hiển thị lại “Danh sách tài khoản” sau khi tạo.
+Alternative flows	N/A
+Exception flows	7a. Nếu người dùng bỏ trống trường “Tên đăng nhập”, hệ thống hiển thị thông báo “Vui lòng nhập tên đăng nhập!” ngay dưới trường “Tên đăng nhập” | 7b. Nếu người dùng bỏ trống trường “Mật khẩu”, hệ thống hiển thị thông báo “Vui lòng nhập mật khẩu!” ngay dưới trường “Mật khẩu” |  | 7c. Nếu “Tên đăng nhập” đã tồn tại trong hệ thống, hệ thống thông báo “Tên đăng nhập đã tồn tại!” ngay dưới trường “Tên đăng nhập”. |  | 7d. Nếu “Mật khẩu” không có độ dài từ 6 đến 50 kí tự hoặc không chứa ít nhất 1 kí tự đặc biệt (@, #, !) thì hệ thống thông báo “Mật khẩu không đạt yêu cầu!” ngay dưới trường “Mật khẩu”. |  | 7e. Nếu “Mã nhân viên” được chọn đã có tài khoản trong hệ thống thì hệ thống thông báo “Nhân viên này đã có tài khoản!” ngay dưới trường “Mã nhân viên”. |  | 8a. Nếu gặp lỗi trong quá trình lưu, hệ thống thông báo “Đã xảy ra lỗi hệ thống! Vui lòng thử lại sau.” | UC kết thúc
+Business rules	BR01. Trường “Tên đăng nhập” và “Mật khẩu” không được để trống | BR02. Trường “Tên đăng nhập” có độ dài tối đa là 20 | BR03. Trường “Mật khẩu” có độ dài từ 6 đến 50 kí tự. Phải chứa ít nhất 1 kí tự đặc biệt (@, #, !)
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	6.2
+Use case name | 	Sửa thông tin tài khoản
+Description | 	Là quản lý, tôi muốn sửa thông tin tài khoản, thông tin đăng nhập, đặt lại mật khẩu cho nhân viên, khóa tài khoản khi cần thiết
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng bấm nút “Sửa” trong mục “Quản lý tài khoản”
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Tài khoản cần cập nhật đã tồn tại trong hệ thống.
+Post-conditions	Thông tin tài khoản được cập nhật và lưu vào hệ thống
+Main flow	Người dùng chọn mục “Quản lý tài khoản”. | Hệ thống hiển thị màn hình “Quản lý tài khoản”, gồm: nút “Tạo tài khoản”, bảng “Danh sách tài khoản” gồm các trường: “MÃ TÀI KHOẢN”, “TÊN ĐĂNG NHẬP”, “MẬT KHẨU”, “MÃ NHÂN VIÊN”, “VAI TRÒ”, “TRẠNG THÁI”, “THAO TÁC”(Sửa/Xóa). | Người dùng bấm nút “Sửa” ở tài khoản muốn sửa | Hệ thống hiển thị form “Sửa thông tin tài khoản”, gồm: “Đang sửa tài khoản <MãTàiKhoản>”, “Mã tài khoản”, “Tên đăng nhập”, “Mật khẩu”, “Mã nhân viên”, “Vai trò”, “Trạng thái”; nút “Hủy” và nút “Lưu thay đổi” | Người dùng chỉnh sửa các thông tin cần sửa. | Người dùng bấm nút “Lưu thay đổi”. | Hệ thống kiểm tra tính hợp lệ của thông tin. | Hệ thống lưu thông tin vào cơ sở dữ liệu. | Hệ thống hiển thị thông báo “Cập nhật thông tin tài khoản thành công!” và hiển thị lại “Danh sách tài khoản” sau khi cập nhật.
+Alternative flows	9a. Nếu người dùng chỉnh sửa “Tên đăng nhập” hoặc “Mật khẩu” của chính tài khoản đang dùng để chỉnh sửa, hệ thống đăng xuất phiên hiện tại và quay về màn hình đăng nhập | UC kết thúc
+Exception flows	7a. Nếu “Tên đăng nhập” trùng với tên đăng nhập đã tồn tại trong hệ thống, hệ thống thông báo “Tên đăng nhập đã tồn tại!” ngay dưới trường “Tên đăng nhập”. |  | 7b. Nếu “Mật khẩu” không có độ dài từ 6 đến 50 kí tự hoặc không chứa ít nhất 1 kí tự đặc biệt (@, #, !) thì hệ thống thông báo “Mật khẩu không đạt yêu cầu!” ngay dưới trường “Mật khẩu”. |  | 7c. Nếu “Mã nhân viên” được chọn đã có tài khoản trước đó thì hệ thống thông báo “Nhân viên này đã có tài khoản!” ngay dưới trường “Mã nhân viên”
+Business rules	BR01. Trường “Tên đăng nhập” và “Mật khẩu” không được để trống | BR02. Trường “Tên đăng nhập” có độ dài tối đa là 20 | BR03. Trường “Mật khẩu” có độ dài từ 6 đến 50 kí tự. Phải chứa ít nhất 1 kí tự đặc biệt (@, #, !)
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	6.3
+Use case name | 	Xóa tài khoản
+Description | 	Là Quản lý, tôi muốn xóa tài khoản khỏi hệ thống
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng chọn chức năng “Xóa tài khoản” trong mục “Quản lý tài khoản”
+Pre-conditions	• Người dùng đã đăng nhập thành công vào hệ thống. | • Tài khoản cần xóa đã tồn tại trong hệ thống.
+Post-conditions	Tài khoản được xóa khỏi hệ thống
+Main flow	Người dùng chọn mục “Quản lý tài khoản”. | Hệ thống hiển thị màn hình “Quản lý tài khoản”, gồm: nút “Tạo tài khoản”, bảng “Danh sách tài khoản” gồm các trường: “MÃ TÀI KHOẢN”, “TÊN ĐĂNG NHẬP”, “MẬT KHẨU”, “MÃ NHÂN VIÊN”, “VAI TRÒ”, “TRẠNG THÁI”, “THAO TÁC”(Sửa/Xóa). | Người dùng bấm nút “Xóa” ở tài khoản muốn xóa. | Hệ thống hiển thị hộp thoại xác nhận “Bạn có chắc chắn muốn xóa tài khoản này không?”, nút “Hủy”, “Khóa tài khoản này”, “Xác nhận”. | Người dùng bấm nút “Xác nhận”. | Hệ thống thực hiện xóa tài khoản được chọn khỏi hệ thống. | Hệ thống hiển thị thông báo “Xóa tài khoản thành công!”. | Hệ thống hiển thị lại danh sách tài khoản.
+Alternative flows	4a. Người dùng bấm nút “Hủy”. | 4a1. Hệ thống quay về màn hình “Quản lý tài khoản” ban đầu | UC kết thúc |  | 4b. Người dùng bấm nút “Khóa tài khoản này” | 4b1. Hệ thống lưu trạng thái vào CSDL | 4b2. Hệ thống hiển thị thông báo “Đã khóa tài khoản này” | UC tiếp tục bước 8
+Exception flows	6c. Nếu người dùng chọn xóa chính tài khoản đang dùng để xóa, hệ thống hiển thị thông báo “Không thể xóa tài khoản này!”. | UC kết thúc |  | 7a. Nếu hệ thống gặp lỗi cơ sở dữ liệu hoặc mất kết nối trong quá trình xóa tài khoản, hệ thống hiển thị thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”. | UC kết thúc
+Business rules	N/A
+Non-functional requirement	N/A
+
+=== TABLE ===
+Use case ID | 	7
+Use case name | 	Đăng xuất
+Description | 	Là Nhân viên/Quản lý, tôi muốn đăng xuất khỏi hệ thống
+Actors	Quản lý
+Priority	High
+Triggers	Người dùng bấm “Đăng xuất”
+Pre-conditions	Người dùng đã đăng nhập thành công vào hệ thống.
+Post-conditions	Phiên đăng nhập hiện tại được kết thúc và hệ thống chuyển về màn hình đăng nhập
+Main flow	Người dùng bấm nút “Đăng xuất”. | Hệ thống hiển thị hộp thoại “Bạn có chắc chắn muốn đăng xuất?”, nút bấm “Không” và nút bấm “Có”. | Người dùng chọn “Có”. | Hệ thống kết thúc phiên đăng nhập hiện tại. | Hệ thống hiển thị màn hình đăng nhập.
+Alternative flows	3a. Người dùng chọn “Không”. | 3a1. Hệ thống đóng hộp thoại xác nhận. | UC kết thúc
+Exception flows	4a. Nếu hệ thống gặp lỗi khi xử lý yêu cầu đăng xuất, hệ thống thông báo “Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!”. | UC kết thúc
+Business rules	N/A
+Non-functional requirement	N/A
+
+=== TABLE ===
+ID	Non-functional requirements
+NFR-01	Hệ thống phải phản hồi nhanh trong quá trình thực hiện các thao tác bán hàng.
+NFR-02	Hệ thống phải hỗ trợ tra cứu dữ liệu đơn hàng với thời gian phản hồi ngắn.
+NFR-03	Hệ thống phải phản hồi và xác nhận kết quả thanh toán trong thời gian ngắn.
+
+=== TABLE ===
+ID	Non-functional requirements
+NFR-04	Thao tác trên hệ thống cần đơn giản và dễ học cho nhân viên
+NFR-05	Giao diện phải thân thiện và các thông tin, chức năng được trình bày rõ ràng dễ theo dõi
+
+=== TABLE ===
+ID	Non-functional requirements
+NFR-06	Hệ thống phải có khả năng hoạt động trên máy tính tại quán và trên điện thoại
