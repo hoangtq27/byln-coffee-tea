@@ -133,7 +133,7 @@ export default function AccountForm({ account, onClose, onSaved }: { account: Ac
             value={password}
             maxLength={50}
             autoComplete="new-password"
-            placeholder={edit ? "Để trống nếu không đổi mật khẩu" : ""}
+            placeholder={edit ? "" : ""}
             onChange={(e) => {
               setPassword(e.target.value);
               setErrs((x) => ({ ...x, matKhau: "" }));

@@ -1,3 +1,5 @@
 # File chứa nội dung ghi chú của nhóm. Claude không cần quan tâm file này.
 
 & "$env:USERPROFILE\.local\bin\claude.exe"
+
+            placeholder={edit ? "Để trống nếu không đổi mật khẩu" : ""}
