@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { ApiError, post } from "../lib/api";
+import { ApiError, get, post } from "../lib/api";
 import { useAuth, type User } from "../lib/auth";
 import { useToast } from "../components/Toast";
 
@@ -13,6 +13,12 @@ export default function Login() {
   const [errs, setErrs] = useState<{ u?: string; p?: string }>({});
   const [bad, setBad] = useState(false); // sai thông tin / bị khóa -> viền đỏ cả hai ô
   const [busy, setBusy] = useState(false);
+
+  // "Đánh thức" backend (Render Free ngủ sau ~15 phút) và CSDL ngay khi mở màn hình đăng nhập,
+  // để lúc bấm "Đăng nhập" không phải chờ khởi động lạnh.
+  useEffect(() => {
+    get("/health").catch(() => undefined);
+  }, []);
 
   if (user) return <Navigate to="/orders" replace />;
 
@@ -67,8 +73,9 @@ export default function Login() {
         />
         {errs.p && <div className="err err-right">{errs.p}</div>}
 
-        <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
-          Đăng nhập
+        <button className="btn btn-primary btn-block" type="submit" disabled={busy} aria-busy={busy}>
+          {busy ? <span className="spinner" aria-hidden="true" /> : null}
+          {busy ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
         <div className="login-foot">Bình Yên Là Nhà Coffee &amp; Tea</div>
       </form>

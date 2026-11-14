@@ -33,6 +33,11 @@ describe("Đăng nhập", () => {
     expect(r.status).toBe(401);
     expect(r.body.message).toBe("Tên đăng nhập hoặc mật khẩu sai!");
   });
+  it("tên đăng nhập không tồn tại -> 401 (không lỗi 500)", async () => {
+    const r = await login("khong.ton.tai", "abc");
+    expect(r.status).toBe(401);
+    expect(r.body.message).toBe("Tên đăng nhập hoặc mật khẩu sai!");
+  });
   it("vai trò", async () => {
     expect((await login("quanly", DEMO_PASSWORDS.manager)).body.user.role).toBe("manager");
     expect((await login("lan.nv", DEMO_PASSWORDS.staff)).body.user.role).toBe("staff");
@@ -281,6 +286,27 @@ describe("Tài khoản", () => {
     for (const p of ["abc", "abcdefg", "a@" + "x".repeat(60)]) expect((await mk({ matKhau: p })).body.fields.matKhau, p).toBe("Mật khẩu không đạt yêu cầu!");
     expect((await mk({ maNhanVien: "NV002" })).body.fields.maNhanVien).toBe("Nhân viên này đã có tài khoản!");
     expect((await mk({ tenDangNhap: "x".repeat(21) })).status).toBe(400);
+  });
+  it("tài khoản không thuộc nhân viên nào", async () => {
+    const c = await request(app).post("/api/accounts").set(A(mgr)).send({ tenDangNhap: "khach.ql", matKhau: "Abc@123", maNhanVien: "", vaiTro: "manager" });
+    expect(c.status).toBe(201);
+    const c2 = await request(app).post("/api/accounts").set(A(mgr)).send({ tenDangNhap: "khach2", matKhau: "Abc@123", vaiTro: "staff" });
+    expect(c2.status).toBe(201);
+    const list = (await request(app).get("/api/accounts").set(A(mgr))).body.items;
+    expect(list.find((a: any) => a.tenDangNhap === "khach.ql").maNhanVien).toBeNull();
+    const l = await login("khach.ql", "Abc@123");
+    expect(l.status).toBe(200);
+    expect(l.body.user.maNhanVien).toBeNull();
+    await request(app).get("/api/revenue/report").query({ from: "2026-10-01", to: "2026-10-31" }).set(A(l.body.token)).expect(200);
+    const o = await request(app).post("/api/orders").set(A(l.body.token)).send({ items: [{ maMon: "M001", soLuong: 1 }] });
+    expect(o.status).toBe(403);
+    // gắn lại nhân viên rồi bỏ gắn khi sửa
+    const ma = list.find((a: any) => a.tenDangNhap === "khach2").maTaiKhoan;
+    await request(app).put(`/api/accounts/${ma}`).set(A(mgr)).send({ tenDangNhap: "khach2", maNhanVien: "NV008", vaiTro: "staff", trangThai: 1 }).expect(200);
+    await request(app).put(`/api/accounts/${ma}`).set(A(mgr)).send({ tenDangNhap: "khach2", maNhanVien: null, vaiTro: "staff", trangThai: 1 }).expect(200);
+    // khóa lại để "quanly" vẫn là Quản lý hoạt động duy nhất cho các test sau
+    const qlMa = list.find((a: any) => a.tenDangNhap === "khach.ql").maTaiKhoan;
+    await request(app).post(`/api/accounts/${qlMa}/lock`).set(A(mgr)).expect(200);
   });
   it("không xóa chính mình; sửa chính mình -> forceLogout; không bỏ quản lý cuối", async () => {
     const r = await request(app).delete("/api/accounts/TK001").set(A(mgr));

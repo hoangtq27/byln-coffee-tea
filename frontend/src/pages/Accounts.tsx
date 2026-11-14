@@ -9,8 +9,8 @@ import { useAuth } from "../lib/auth";
 export interface Account {
   maTaiKhoan: string;
   tenDangNhap: string;
-  maNhanVien: string;
-  tenNhanVien: string;
+  maNhanVien: string | null;
+  tenNhanVien: string | null;
   vaiTro: "manager" | "staff";
   trangThai: number;
 }
@@ -112,7 +112,7 @@ export default function Accounts() {
                   <td className="strong">{a.maTaiKhoan}</td>
                   <td>{a.tenDangNhap}</td>
                   <td>••••••••</td>
-                  <td>{a.maNhanVien}</td>
+                  <td>{a.maNhanVien ?? <span className="muted">—</span>}</td>
                   <td>{a.vaiTro === "manager" ? "Quản lý" : "Nhân viên"}</td>
                   <td>
                     <span className={`pill ${a.trangThai ? "pill-green" : "pill-red"}`}>{a.trangThai ? "Hoạt động" : "Khóa"}</span>

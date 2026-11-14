@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { BarChart } from "../components/BarChart";
 import { DateInput } from "../components/DateInput";
 import { Page } from "../components/Layout";
@@ -53,11 +53,7 @@ export default function RevenueReport() {
     [toast],
   );
 
-  useEffect(() => {
-    run(from, to, gran);
-    // chỉ tải lần đầu với mặc định; các lần sau do người dùng bấm "Xem báo cáo"
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Kết quả báo cáo chỉ hiển thị sau khi người dùng bấm "Xem báo cáo" (UC 4.1 bước 5-6).
 
   return (
     <Page crumbs={["Quản lý doanh thu", "Báo cáo doanh thu"]} title="Báo cáo doanh thu">
@@ -86,7 +82,7 @@ export default function RevenueReport() {
       </section>
 
       {data && (
-        <>
+        <div className="reveal stack">
           <div className="stat-grid">
             <div className="stat"><div className="stat-label">Tổng doanh thu</div><div className="stat-value">{formatVnd(data.tongDoanhThu)}</div></div>
             <div className="stat"><div className="stat-label">Số đơn hàng</div><div className="stat-value">{data.soDonHang.toLocaleString("vi-VN")}</div></div>
@@ -115,7 +111,7 @@ export default function RevenueReport() {
               )}
             </section>
           </div>
-        </>
+        </div>
       )}
     </Page>
   );

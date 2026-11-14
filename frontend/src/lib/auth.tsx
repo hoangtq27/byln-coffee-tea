@@ -5,8 +5,8 @@ export type Role = "manager" | "staff";
 export interface User {
   maTaiKhoan: string;
   tenDangNhap: string;
-  maNhanVien: string;
-  tenNhanVien: string;
+  maNhanVien: string | null;
+  tenNhanVien: string | null;
   role: Role;
 }
 

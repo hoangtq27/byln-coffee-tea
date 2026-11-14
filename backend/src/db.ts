@@ -28,7 +28,12 @@ function createPg(url: string): Database {
     connectionString: url,
     ssl: /localhost|127\.0\.0\.1/.test(url) ? false : { rejectUnauthorized: false },
     max: 5,
+    // Giữ kết nối lâu hơn để tránh bắt tay TLS lại với Neon ở mỗi lần đăng nhập sau thời gian rảnh
+    idleTimeoutMillis: 5 * 60 * 1000,
+    keepAlive: true,
+    connectionTimeoutMillis: 15000,
   });
+  pool.on("error", (e) => console.error("pg pool error:", e.message));
   return {
     query: (sql, params) => pool.query(sql, params as any[]) as any,
     async tx(fn) {

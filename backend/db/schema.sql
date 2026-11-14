@@ -17,10 +17,12 @@ CREATE TABLE IF NOT EXISTS taikhoan (
   "MaTaiKhoan"  CHAR(5) PRIMARY KEY,
   "TenDangNhap" VARCHAR(20) NOT NULL UNIQUE,
   "MatKhau"     VARCHAR(100) NOT NULL,
-  "MaNhanVien"  CHAR(5) NOT NULL UNIQUE REFERENCES nhanvien("MaNhanVien"),
+  "MaNhanVien"  CHAR(5) NULL UNIQUE REFERENCES nhanvien("MaNhanVien"), -- có thể không thuộc nhân viên nào
   "VaiTro"      SMALLINT NOT NULL CHECK ("VaiTro" IN (0,1)),     -- 0=Quản lý, 1=Nhân viên
   "TrangThai"   SMALLINT NOT NULL DEFAULT 1 CHECK ("TrangThai" IN (0,1)) -- 0=Khóa, 1=Hoạt động
 );
+-- Nâng cấp CSDL đã tạo trước đó (cột từng là NOT NULL)
+ALTER TABLE taikhoan ALTER COLUMN "MaNhanVien" DROP NOT NULL;
 
 CREATE TABLE IF NOT EXISTS calam (
   "MaCaLam"     SERIAL PRIMARY KEY,

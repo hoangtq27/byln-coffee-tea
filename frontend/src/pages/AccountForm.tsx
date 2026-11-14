@@ -46,7 +46,7 @@ export default function AccountForm({ mode }: { mode: "create" | "edit" }) {
             return;
           }
           setUsername(a.tenDangNhap);
-          setMaNv(a.maNhanVien);
+          setMaNv(a.maNhanVien ?? "");
           setRole(a.vaiTro);
           setStatus(a.trangThai);
         }
@@ -63,7 +63,6 @@ export default function AccountForm({ mode }: { mode: "create" | "edit" }) {
     if (!username.trim()) e.tenDangNhap = "Vui lòng nhập tên đăng nhập!";
     if (!edit && !password) e.matKhau = "Vui lòng nhập mật khẩu!";
     else if (password && (password.length < 6 || password.length > 50 || !/[@#!]/.test(password))) e.matKhau = PW_MSG;
-    if (!maNv) e.maNhanVien = "Vui lòng chọn nhân viên!";
     setErrs(e);
     return Object.keys(e).length === 0;
   };
@@ -72,7 +71,7 @@ export default function AccountForm({ mode }: { mode: "create" | "edit" }) {
     if (busy || !validate()) return;
     setBusy(true);
     try {
-      const body = { tenDangNhap: username.trim(), matKhau: password, maNhanVien: maNv, vaiTro: role, trangThai: status };
+      const body = { tenDangNhap: username.trim(), matKhau: password, maNhanVien: maNv || null, vaiTro: role, trangThai: status };
       if (edit) {
         const r = await put<{ message: string; forceLogout?: boolean }>(`/accounts/${ma}`, body);
         toast.success(r.message);
@@ -173,7 +172,7 @@ export default function AccountForm({ mode }: { mode: "create" | "edit" }) {
                   setErrs((x) => ({ ...x, maNhanVien: "" }));
                 }}
               >
-                <option value="">— Chọn nhân viên —</option>
+                <option value="">— Không thuộc nhân viên nào —</option>
                 {emps.map((n) => {
                   const taken = n.coTaiKhoan && n.maNhanVien !== maNv;
                   return (

@@ -12,18 +12,18 @@ accountsRouter.use(authenticate, requireRole("manager"));
 interface AccRow {
   MaTaiKhoan: string;
   TenDangNhap: string;
-  MaNhanVien: string;
+  MaNhanVien: string | null;
   VaiTro: number;
   TrangThai: number;
-  TenNhanVien: string;
+  TenNhanVien: string | null;
 }
 const SELECT = `SELECT t."MaTaiKhoan",t."TenDangNhap",t."MaNhanVien",t."VaiTro",t."TrangThai",n."TenNhanVien"
-  FROM taikhoan t JOIN nhanvien n ON n."MaNhanVien"=t."MaNhanVien"`;
+  FROM taikhoan t LEFT JOIN nhanvien n ON n."MaNhanVien"=t."MaNhanVien"`;
 const map = (r: AccRow) => ({
   maTaiKhoan: r.MaTaiKhoan.trim(),
   tenDangNhap: r.TenDangNhap,
-  maNhanVien: r.MaNhanVien.trim(),
-  tenNhanVien: r.TenNhanVien,
+  maNhanVien: r.MaNhanVien ? r.MaNhanVien.trim() : null,
+  tenNhanVien: r.TenNhanVien ?? null,
   vaiTro: r.VaiTro === 0 ? "manager" : "staff",
   trangThai: r.TrangThai, // 1 Hoạt động, 0 Khóa
 });
@@ -35,9 +35,12 @@ const base = {
     .string({ required_error: "Vui lòng nhập tên đăng nhập!", invalid_type_error: "Vui lòng nhập tên đăng nhập!" })
     .transform((s) => s.trim())
     .pipe(z.string().min(1, "Vui lòng nhập tên đăng nhập!").max(20, "Tên đăng nhập tối đa 20 ký tự!")),
+  // Không bắt buộc: tài khoản có thể không thuộc nhân viên nào ("" / null -> null)
   maNhanVien: z
-    .string({ required_error: "Vui lòng chọn nhân viên!", invalid_type_error: "Vui lòng chọn nhân viên!" })
-    .min(1, "Vui lòng chọn nhân viên!"),
+    .string()
+    .nullable()
+    .optional()
+    .transform((s) => (s && s.trim() ? s.trim() : null)),
   vaiTro: z.enum(["manager", "staff"], { errorMap: () => ({ message: "Vui lòng chọn vai trò!" }) }),
   trangThai: z.union([z.literal(0), z.literal(1)]).default(1),
 };
@@ -53,15 +56,17 @@ async function nextCode(e: Executor): Promise<string> {
   return "TK" + String(n + 1).padStart(3, "0");
 }
 
-async function checkUnique(e: Executor, b: { tenDangNhap: string; maNhanVien: string }, exceptCode?: string) {
+async function checkUnique(e: Executor, b: { tenDangNhap: string; maNhanVien: string | null }, exceptCode?: string) {
   const fields: Record<string, string> = {};
   const ex = exceptCode ?? null;
   const u = await e.query(`SELECT 1 FROM taikhoan WHERE "TenDangNhap"=$1 AND ($2::text IS NULL OR "MaTaiKhoan"<>$2)`, [b.tenDangNhap, ex]);
   if (u.rows.length) fields.tenDangNhap = "Tên đăng nhập đã tồn tại!";
-  const n = await e.query(`SELECT 1 FROM taikhoan WHERE "MaNhanVien"=$1 AND ($2::text IS NULL OR "MaTaiKhoan"<>$2)`, [b.maNhanVien, ex]);
-  if (n.rows.length) fields.maNhanVien = "Nhân viên này đã có tài khoản!";
-  const emp = await e.query(`SELECT 1 FROM nhanvien WHERE "MaNhanVien"=$1`, [b.maNhanVien]);
-  if (!emp.rows.length) fields.maNhanVien = "Nhân viên không tồn tại!";
+  if (b.maNhanVien) {
+    const n = await e.query(`SELECT 1 FROM taikhoan WHERE "MaNhanVien"=$1 AND ($2::text IS NULL OR "MaTaiKhoan"<>$2)`, [b.maNhanVien, ex]);
+    if (n.rows.length) fields.maNhanVien = "Nhân viên này đã có tài khoản!";
+    const emp = await e.query(`SELECT 1 FROM nhanvien WHERE "MaNhanVien"=$1`, [b.maNhanVien]);
+    if (!emp.rows.length) fields.maNhanVien = "Nhân viên không tồn tại!";
+  }
   if (Object.keys(fields).length) throw new HttpError(409, Object.values(fields)[0], fields);
 }
 

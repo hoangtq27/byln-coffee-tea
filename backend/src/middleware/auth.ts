@@ -9,8 +9,8 @@ export type Role = "manager" | "staff";
 export interface AuthUser {
   maTaiKhoan: string;
   tenDangNhap: string;
-  maNhanVien: string;
-  tenNhanVien: string;
+  maNhanVien: string | null; // tài khoản có thể không thuộc nhân viên nào
+  tenNhanVien: string | null;
   role: Role;
 }
 
@@ -37,7 +37,7 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     }
     const { rows } = await getDb().query(
       `SELECT t."MaTaiKhoan", t."TenDangNhap", t."MaNhanVien", t."VaiTro", t."TrangThai", n."TenNhanVien"
-       FROM taikhoan t JOIN nhanvien n ON n."MaNhanVien" = t."MaNhanVien"
+       FROM taikhoan t LEFT JOIN nhanvien n ON n."MaNhanVien" = t."MaNhanVien"
        WHERE t."MaTaiKhoan" = $1`,
       [sub],
     );
@@ -46,8 +46,8 @@ export async function authenticate(req: Request, _res: Response, next: NextFunct
     req.user = {
       maTaiKhoan: a.MaTaiKhoan.trim(),
       tenDangNhap: a.TenDangNhap,
-      maNhanVien: a.MaNhanVien.trim(),
-      tenNhanVien: a.TenNhanVien,
+      maNhanVien: a.MaNhanVien ? a.MaNhanVien.trim() : null,
+      tenNhanVien: a.TenNhanVien ?? null,
       role: a.VaiTro === 0 ? "manager" : "staff",
     };
     next();

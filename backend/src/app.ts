@@ -4,6 +4,7 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { config } from "./config.js";
 import { HttpError } from "./lib/http.js";
+import { getDb } from "./db.js";
 import { authRouter } from "./routes/auth.js";
 import { dishesRouter } from "./routes/dishes.js";
 import { ordersRouter } from "./routes/orders.js";
@@ -26,7 +27,16 @@ export function createApp() {
   );
   app.use(express.json({ limit: "100kb" }));
 
-  app.get("/api/health", (_req, res) => res.json({ ok: true }));
+  // Màn hình đăng nhập gọi endpoint này khi vừa mở để "đánh thức" server (Render Free) và CSDL (Neon)
+  // trước khi người dùng bấm "Đăng nhập".
+  app.get("/api/health", async (_req, res) => {
+    try {
+      await getDb().query("SELECT 1");
+      res.json({ ok: true });
+    } catch {
+      res.status(503).json({ ok: false });
+    }
+  });
 
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,

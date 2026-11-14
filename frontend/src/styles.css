@@ -258,6 +258,36 @@ th.sticky-right { background: #f8f1e8; z-index: 3; }
 .toast-success { border-left-color: var(--green); }
 .toast-error { border-left-color: var(--red); }
 
+/* ---------- Hiệu ứng chuyển cảnh ---------- */
+.toast { cursor: pointer; animation: toast-in 0.38s cubic-bezier(0.2, 0.9, 0.25, 1.15) both; will-change: transform, opacity; }
+.toast.leaving { animation: toast-out 0.32s cubic-bezier(0.55, 0, 0.75, 0.2) forwards; }
+@keyframes toast-in { from { transform: translateX(calc(100% + 24px)); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes toast-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(calc(100% + 24px)); opacity: 0; } }
+
+.content { animation: page-in 0.28s ease-out both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.reveal { animation: page-in 0.3s ease-out both; }
+.stack { display: flex; flex-direction: column; gap: 18px; }
+
+.modal-backdrop { animation: fade-in 0.18s ease-out both; }
+.modal { animation: modal-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-in { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+.nav-sub { animation: sub-open 0.2s ease-out both; transform-origin: top; }
+@keyframes sub-open { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.nav-item, .nav-subitem, .btn, .seg-btn, .dish-card, .link { transition: background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s; }
+.cal-pop { animation: modal-in 0.16s ease-out both; }
+.scrim { animation: fade-in 0.2s ease-out both; }
+
+.btn-block { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.spinner { width: 14px; height: 14px; border: 2px solid rgba(255, 255, 255, 0.45); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
   .order-layout, .report-grid { grid-template-columns: 1fr; }

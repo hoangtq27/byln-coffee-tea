@@ -32,7 +32,7 @@ Tài khoản mẫu:
 | Quản lý   | `quanly`                                   | `Quanly@123`   |
 | Nhân viên | `lan.nv`, `minh.nv`, `hoa.nv`, `tuan.nv`, `my.nv` | `Nhanvien@123` |
 
-Kiểm thử backend: `cd backend && npm test` (36 test: phân quyền, validate theo SRS, tìm kiếm, đơn hàng, doanh thu, ca làm).
+Kiểm thử backend: `cd backend && npm test` (38 test: phân quyền, validate theo SRS, tìm kiếm, đơn hàng, doanh thu, ca làm).
 
 ## Triển khai
 

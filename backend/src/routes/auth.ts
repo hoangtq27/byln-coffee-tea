@@ -7,6 +7,9 @@ import { authenticate, signToken } from "../middleware/auth.js";
 
 export const authRouter = Router();
 
+// Hash hợp lệ dùng khi tên đăng nhập không tồn tại (hash không hợp lệ làm bcrypt ném lỗi -> 500)
+const DUMMY_HASH = bcrypt.hashSync("dummy-password!", 10);
+
 const loginSchema = z.object({
   tenDangNhap: z.string().optional().default(""),
   matKhau: z.string().optional().default(""),
@@ -22,13 +25,13 @@ authRouter.post(
     if (Object.keys(fields).length) throw new HttpError(400, "Vui lòng nhập đầy đủ thông tin", fields);
 
     const { rows } = await getDb().query(
-      `SELECT t.*, n."TenNhanVien" FROM taikhoan t JOIN nhanvien n ON n."MaNhanVien" = t."MaNhanVien"
+      `SELECT t.*, n."TenNhanVien" FROM taikhoan t LEFT JOIN nhanvien n ON n."MaNhanVien" = t."MaNhanVien"
        WHERE t."TenDangNhap" = $1`,
       [body.tenDangNhap.trim()],
     );
     const acc = rows[0];
     // So sánh hash cả khi không có tài khoản để thời gian phản hồi không lộ thông tin
-    const hash = acc?.MatKhau ?? "$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinvalidi";
+    const hash = acc?.MatKhau ?? DUMMY_HASH;
     const ok = await bcrypt.compare(body.matKhau, hash);
     if (!acc || !ok) throw new HttpError(401, "Tên đăng nhập hoặc mật khẩu sai!");
     if (acc.TrangThai !== 1) throw new HttpError(403, "Tài khoản này đã bị khóa. Không thể đăng nhập!");
@@ -38,8 +41,8 @@ authRouter.post(
       user: {
         maTaiKhoan: acc.MaTaiKhoan.trim(),
         tenDangNhap: acc.TenDangNhap,
-        maNhanVien: acc.MaNhanVien.trim(),
-        tenNhanVien: acc.TenNhanVien,
+        maNhanVien: acc.MaNhanVien ? acc.MaNhanVien.trim() : null,
+        tenNhanVien: acc.TenNhanVien ?? null,
         role: acc.VaiTro === 0 ? "manager" : "staff",
       },
     });

@@ -199,6 +199,9 @@ ordersRouter.get(
 ordersRouter.post(
   "/",
   asyncHandler(async (req, res) => {
+    // SDD: DONHANG.MaNhanVien NOT NULL -> tài khoản không gắn nhân viên thì không ghi nhận đơn được
+    if (!req.user!.maNhanVien)
+      throw new HttpError(403, "Tài khoản chưa gắn với nhân viên nên không thể tạo đơn hàng!");
     const b = parse(orderBody, req.body ?? {});
     const phuongThuc = b.nguon !== 0 ? 1 : b.phuongThuc; // đơn nền tảng ngoài: không thu tiền mặt tại quầy
     const created = await getDb().tx(async (t) => {
