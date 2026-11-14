@@ -3,3 +3,8 @@
 & "$env:USERPROFILE\.local\bin\claude.exe"
 
             placeholder={edit ? "Để trống nếu không đổi mật khẩu" : ""}
+
+
+<button type="button" className="btn btn-light" onClick={() => setDraft(null)}>
+              Hủy
+            </button>
