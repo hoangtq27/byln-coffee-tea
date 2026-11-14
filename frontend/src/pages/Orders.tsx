@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type UIEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Page } from "../components/Layout";
-import { Modal } from "../components/Modal";
 import { useToast } from "../components/Toast";
 import { ApiError, get } from "../lib/api";
 import {
   formatDateTime,
-  formatVnd,
+  formatMoney,
   NGUON,
   PHUONG_THUC,
   TRANG_THAI_DON,
-  type OrderItem,
   type OrderSummary,
 } from "../lib/format";
 
@@ -25,7 +23,6 @@ export default function Orders() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [detail, setDetail] = useState<string | null>(null);
   const seq = useRef(0);
 
   const load = useCallback(
@@ -92,10 +89,6 @@ export default function Orders() {
       <section className="card">
         <div className="card-title">
           Danh sách đơn hàng
-          <span className="muted">
-            {" "}
-            ({items.length}/{total})
-          </span>
         </div>
         <div className="table-scroll orders-scroll" onScroll={onScroll}>
           <table className="table">
@@ -120,24 +113,20 @@ export default function Orders() {
                 <tr key={o.maDonHang}>
                   <td className="strong">{o.maDonHang}</td>
                   <td>{formatDateTime(o.thoiGianTao)}</td>
-                  <td className="num strong">{formatVnd(o.tongThanhToan)}</td>
+                  <td className="num strong">{formatMoney(o.tongThanhToan)}</td>
                   <td>{PHUONG_THUC[o.phuongThuc]}</td>
                   <td>
-                    <span className={o.thanhToan ? "text-green" : "text-red"}>{o.thanhToan ? "Đã thanh toán" : "Chưa thanh toán"}</span>
+                    <span className={`pill ${o.thanhToan ? "pill-green" : "pill-red"}`}>{o.thanhToan ? "Đã thanh toán" : "Chưa thanh toán"}</span>
                   </td>
                   <td>{o.maNhanVien}</td>
-                  <td className="num">{formatVnd(o.tongTien)}</td>
-                  <td className="num">{formatVnd(o.giamGia)}</td>
+                  <td className="num">{formatMoney(o.tongTien)}</td>
+                  <td className="num">{formatMoney(o.giamGia)}</td>
                   <td>{NGUON[o.nguon]}</td>
                   <td>
                     <span className={`pill pill-s${o.trangThaiDon}`}>{TRANG_THAI_DON[o.trangThaiDon]}</span>
                   </td>
                   <td className="note">{o.ghiChu}</td>
                   <td className="sticky-right">
-                    <button type="button" className="link" onClick={() => setDetail(o.maDonHang)}>
-                      Xem
-                    </button>
-                    <span className="sep">·</span>
                     <button type="button" className="link" onClick={() => nav(`/orders/${o.maDonHang}/edit`)}>
                       Sửa
                     </button>
@@ -162,82 +151,7 @@ export default function Orders() {
           </table>
         </div>
       </section>
-
-      {detail && <OrderDetail id={detail} onClose={() => setDetail(null)} onEdit={() => nav(`/orders/${detail}/edit`)} />}
     </Page>
   );
 }
 
-function OrderDetail({ id, onClose, onEdit }: { id: string; onClose: () => void; onEdit: () => void }) {
-  const [data, setData] = useState<{ order: OrderSummary; items: OrderItem[] } | null>(null);
-  const [err, setErr] = useState("");
-  useEffect(() => {
-    get(`/orders/${id}`)
-      .then(setData)
-      .catch((e) => setErr(e instanceof ApiError ? e.message : "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!"));
-  }, [id]);
-
-  return (
-    <Modal onClose={onClose} wide>
-      <div className="modal-head">
-        <h3>Chi tiết đơn hàng {id}</h3>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="Đóng">
-          ✕
-        </button>
-      </div>
-      {err && <div className="err">{err}</div>}
-      {!data && !err && <div className="muted">Đang tải...</div>}
-      {data && (
-        <>
-          <dl className="kv">
-            <dt>Mã đơn hàng</dt><dd>{data.order.maDonHang}</dd>
-            <dt>Mã nhân viên</dt><dd>{data.order.maNhanVien}</dd>
-            <dt>Thời gian tạo</dt><dd>{formatDateTime(data.order.thoiGianTao)}</dd>
-            <dt>Nguồn đơn hàng</dt><dd>{NGUON[data.order.nguon]}</dd>
-            <dt>Phương thức thanh toán</dt><dd>{PHUONG_THUC[data.order.phuongThuc]}</dd>
-            <dt>Trạng thái thanh toán</dt><dd>{data.order.thanhToan ? "Đã thanh toán" : "Chưa thanh toán"}</dd>
-            <dt>Trạng thái đơn hàng</dt><dd>{TRANG_THAI_DON[data.order.trangThaiDon]}</dd>
-            <dt>Ghi chú</dt><dd>{data.order.ghiChu || "—"}</dd>
-          </dl>
-          <div className="table-scroll">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>MÃ MÓN</th>
-                  <th>TÊN MÓN</th>
-                  <th className="num">SỐ LƯỢNG</th>
-                  <th className="num">ĐƠN GIÁ</th>
-                  <th className="num">THÀNH TIỀN</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.items.map((i) => (
-                  <tr key={i.maMon}>
-                    <td>{i.maMon}</td>
-                    <td>{i.tenMon}</td>
-                    <td className="num">{i.soLuong}</td>
-                    <td className="num">{formatVnd(i.donGia)}</td>
-                    <td className="num">{formatVnd(i.thanhTien)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="totals">
-            <div><span>Tổng tiền</span><b>{formatVnd(data.order.tongTien)}</b></div>
-            <div><span>Giảm giá</span><b>{formatVnd(data.order.giamGia)}</b></div>
-            <div className="grand"><span>Tổng thanh toán</span><b>{formatVnd(data.order.tongThanhToan)}</b></div>
-          </div>
-          <div className="modal-actions">
-            <button type="button" className="btn btn-light" onClick={onClose}>
-              Đóng
-            </button>
-            <button type="button" className="btn btn-primary" onClick={onEdit}>
-              Chỉnh sửa
-            </button>
-          </div>
-        </>
-      )}
-    </Modal>
-  );
-}

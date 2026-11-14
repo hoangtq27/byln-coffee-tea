@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Page } from "../components/Layout";
+import { Modal } from "../components/Modal";
 import { useToast } from "../components/Toast";
 import { ApiError, get, post, put } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -67,6 +68,9 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [checked, setChecked] = useState<string[]>([]); // món được chọn để xóa (màn Sửa)
+  const [pickerOpen, setPickerOpen] = useState(false); // hộp thoại Thêm món
+  const [picked, setPicked] = useState<string[]>([]);
 
   // Nhân viên không được sửa đơn đã thanh toán, chỉ được chuyển trạng thái đơn sang "Hoàn thành"
   const lockedForStaff = mode === "edit" && user?.role === "staff" && meta?.thanhToan === 1;
@@ -215,28 +219,316 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
   };
 
   const statusOptions = lockedForStaff ? [meta!.trangThaiDon, 2].filter((v, i, a) => a.indexOf(v) === i) : [1, 2, 0];
+  const crumbs = ["Quản lý đơn hàng", mode === "create" ? "Tạo đơn hàng" : "Sửa thông tin đơn hàng"];
 
-  if (loading) return <Page crumbs={["Quản lý đơn hàng", mode === "create" ? "Tạo đơn hàng" : "Sửa đơn hàng"]}><div className="muted">Đang tải...</div></Page>;
+  if (loading)
+    return (
+      <Page crumbs={crumbs} title="Quản lý đơn hàng">
+        <div className="muted">Đang tải...</div>
+      </Page>
+    );
 
+  const editMode = mode === "edit";
+
+  const linesTable = (
+    <div className="table-scroll">
+      <table className="table">
+        <thead>
+          <tr>
+            {editMode && <th className="chk-col">Chọn</th>}
+            <th>Mã món</th>
+            <th>Tên món</th>
+            <th>Số lượng</th>
+            <th className="num">Giá bán</th>
+            <th className="num">Thành tiền</th>
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((l) => {
+            const q = validQty(l.soLuong);
+            const err = errs[`q:${l.maMon}`];
+            return (
+              <tr key={l.maMon}>
+                {editMode && (
+                  <td className="chk-col">
+                    <input
+                      type="checkbox"
+                      className="chk"
+                      disabled={lockedForStaff}
+                      checked={checked.includes(l.maMon)}
+                      aria-label={`Chọn ${l.tenMon}`}
+                      onChange={(e) => setChecked((c) => (e.target.checked ? [...c, l.maMon] : c.filter((x) => x !== l.maMon)))}
+                    />
+                  </td>
+                )}
+                <td>{l.maMon}</td>
+                <td>{l.tenMon}</td>
+                <td className="qty-cell">
+                  <input
+                    className={`input qty${err ? " input-error" : ""}`}
+                    value={l.soLuong}
+                    placeholder="Nhập số lượng"
+                    inputMode="numeric"
+                    disabled={lockedForStaff}
+                    aria-label={`Số lượng ${l.tenMon}`}
+                    onChange={(e) => setQty(l.maMon, e.target.value)}
+                  />
+                  {err && <div className="err">{err}</div>}
+                </td>
+                <td className="num">{formatVnd(l.donGia)}</td>
+                <td className="num">{q ? formatVnd(q * l.donGia) : "—"}</td>
+              </tr>
+            );
+          })}
+          {!lines.length && (
+            <tr>
+              <td colSpan={editMode ? 6 : 5} className="empty">
+                Chưa có món nào được chọn
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const discountField = (
+    <div className="kv-row">
+      <label htmlFor="giamgia">Giảm giá (đ)</label>
+      <div>
+        <input
+          id="giamgia"
+          className={`input${errs.giamGia ? " input-error" : ""}`}
+          value={giamGia}
+          placeholder="0"
+          inputMode="numeric"
+          disabled={lockedForStaff}
+          onChange={(e) => {
+            setGiamGia(e.target.value);
+            setErrs((x) => ({ ...x, giamGia: "" }));
+          }}
+        />
+        {errs.giamGia && <div className="err">{errs.giamGia}</div>}
+      </div>
+    </div>
+  );
+
+  const choiceFields = (
+    <>
+      <div className="kv-row">
+        <label>Nguồn đơn hàng</label>
+        <Segmented
+          value={nguon}
+          disabled={lockedForStaff}
+          options={NGUON.map((label, value) => ({ value, label }))}
+          onChange={(v) => {
+            setNguon(v);
+            if (v !== 0) setPhuongThuc(1);
+          }}
+        />
+      </div>
+      <div className="kv-row">
+        <label>Phương thức thanh toán</label>
+        <Segmented
+          value={delivery ? 1 : phuongThuc}
+          disabled={lockedForStaff || delivery}
+          options={[
+            { value: 0, label: "Tiền mặt" },
+            { value: 1, label: "QR code" },
+          ]}
+          onChange={setPhuongThuc}
+        />
+      </div>
+      <div className="kv-row">
+        <label>Trạng thái thanh toán</label>
+        <Segmented
+          value={thanhToan}
+          disabled={lockedForStaff}
+          options={[
+            { value: 0, label: "Chưa thanh toán" },
+            { value: 1, label: "Đã thanh toán" },
+          ]}
+          onChange={setThanhToan}
+        />
+      </div>
+    </>
+  );
+
+  const noteField = (
+    <div className="kv-row top">
+      <label htmlFor="ghichu">Ghi chú</label>
+      <textarea id="ghichu" className="input" rows={2} maxLength={200} value={ghiChu} disabled={lockedForStaff} onChange={(e) => setGhiChu(e.target.value)} />
+    </div>
+  );
+
+  // ---------- Sửa thông tin đơn hàng (Figma: một thẻ rộng, chọn món để xóa, nút "Thêm món") ----------
+  if (editMode && meta) {
+    return (
+      <Page crumbs={crumbs} title="Quản lý đơn hàng">
+        {lockedForStaff && (
+          <div className="notice">Đơn hàng đã thanh toán: Nhân viên chỉ có thể chuyển trạng thái đơn hàng sang “Hoàn thành”.</div>
+        )}
+        <section className="card order-edit">
+          <div className="oe-head">
+            <h2>Đơn hàng {code}</h2>
+            <span className="muted">
+              Nguồn: {NGUON[meta.nguon]} · Nhân viên: {meta.maNhanVien} · {formatDateTime(meta.thoiGianTao)}
+            </span>
+          </div>
+          <div className="oe-tools">
+            <button
+              type="button"
+              className="btn btn-light"
+              disabled={lockedForStaff}
+              onClick={() => {
+                setPicked([]);
+                setPickerOpen(true);
+              }}
+            >
+              <span aria-hidden="true">+</span> Thêm món
+            </button>
+            {checked.length > 0 && (
+              <button
+                type="button"
+                className="btn btn-light danger-text"
+                onClick={() => {
+                  setLines((ls) => ls.filter((l) => !checked.includes(l.maMon)));
+                  setChecked([]);
+                }}
+              >
+                <span aria-hidden="true">✕</span> Xóa món
+              </button>
+            )}
+          </div>
+          {linesTable}
+          {errs.items && <div className="err">{errs.items}</div>}
+
+          <div className="oe-fields">
+            {choiceFields}
+            <div className="kv-row">
+              <label htmlFor="ttdon">Trạng thái đơn hàng</label>
+              <select id="ttdon" className="input" value={trangThaiDon} onChange={(e) => setTrangThaiDon(Number(e.target.value))}>
+                {statusOptions.map((v) => (
+                  <option key={v} value={v}>
+                    {TRANG_THAI_DON[v]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {discountField}
+            {noteField}
+          </div>
+
+          <div className="oe-sum">
+            <div className="oe-pay">
+              <span>Trạng thái thanh toán</span>
+              <span className={`pill ${meta.thanhToan ? "pill-green" : "pill-red"}`}>{meta.thanhToan ? "Đã thanh toán" : "Chưa thanh toán"}</span>
+            </div>
+            <div className="oe-total">
+              <span>Tổng tiền</span>
+              <b>{formatVnd(total)}</b>
+              {discountNum > 0 && discountValid && (
+                <span className="muted small">
+                  Giảm {formatVnd(discountNum)} · Thanh toán {formatVnd(payable)}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="form-actions">
+            <button type="button" className="btn btn-light" onClick={() => nav("/orders")}>
+              Quay lại
+            </button>
+            <button type="button" className="btn btn-primary" disabled={busy} onClick={save}>
+              Lưu
+            </button>
+          </div>
+        </section>
+
+        {pickerOpen && (
+          <Modal onClose={() => setPickerOpen(false)} wide>
+            <div className="modal-head">
+              <h3>Thêm món</h3>
+            </div>
+            <div className="table-scroll picker">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th className="chk-col">Chọn</th>
+                    <th>Mã món</th>
+                    <th>Tên món</th>
+                    <th className="num">Giá bán</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dishes.map((d) => {
+                    const inOrder = lines.some((l) => l.maMon === d.maMon);
+                    const off = d.trangThai !== 1;
+                    return (
+                      <tr key={d.maMon} className={off || inOrder ? "dim-row" : ""}>
+                        <td className="chk-col">
+                          <input
+                            type="checkbox"
+                            className="chk"
+                            disabled={off || inOrder}
+                            checked={inOrder || picked.includes(d.maMon)}
+                            aria-label={`Chọn ${d.tenMon}`}
+                            onChange={(e) => setPicked((p) => (e.target.checked ? [...p, d.maMon] : p.filter((x) => x !== d.maMon)))}
+                          />
+                        </td>
+                        <td>{d.maMon}</td>
+                        <td>{d.tenMon}</td>
+                        <td className="num">{formatVnd(d.giaBan)}</td>
+                        <td>
+                          <span className={`pill ${off ? "pill-red" : "pill-green"}`}>{off ? "Ngừng bán" : "Đang bán"}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="btn btn-light" onClick={() => setPickerOpen(false)}>
+                Hủy
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={!picked.length}
+                onClick={() => {
+                  const add = dishes.filter((d) => picked.includes(d.maMon));
+                  setLines((ls) => [...ls, ...add.map((d) => ({ maMon: d.maMon, tenMon: d.tenMon, donGia: d.giaBan, soLuong: "" }))]);
+                  setErrs((e) => ({ ...e, items: "" }));
+                  setPickerOpen(false);
+                }}
+              >
+                <span aria-hidden="true">+</span> Thêm vào đơn
+              </button>
+            </div>
+          </Modal>
+        )}
+      </Page>
+    );
+  }
+
+  // ---------- Tạo đơn hàng (Figma: "Chọn món" bên trái, "Đơn hàng mới" bên phải) ----------
   return (
-    <Page crumbs={["Quản lý đơn hàng", mode === "create" ? "Tạo đơn hàng" : "Sửa đơn hàng"]} title={mode === "create" ? "Tạo đơn hàng" : "Sửa thông tin đơn hàng"}>
-      {lockedForStaff && (
-        <div className="notice">Đơn hàng đã thanh toán: Nhân viên chỉ có thể chuyển trạng thái đơn hàng sang “Hoàn thành”.</div>
-      )}
+    <Page crumbs={crumbs} title="Quản lý đơn hàng">
       <div className="order-layout">
         <section className="card">
           <div className="card-title">Chọn món</div>
-          <p className="muted small">Bấm vào món để thêm vào đơn hàng</p>
+          <p className="muted small dish-hint">Bấm vào món để thêm vào đơn hàng</p>
           <div className="dish-grid">
             {dishes.map((d) => {
-              const picked = lines.some((l) => l.maMon === d.maMon);
+              const pickedNow = lines.some((l) => l.maMon === d.maMon);
               const off = d.trangThai !== 1;
               return (
                 <button
                   key={d.maMon}
                   type="button"
-                  disabled={off || lockedForStaff}
-                  className={`dish-card${picked ? " picked" : ""}${off ? " off" : ""}`}
+                  disabled={off}
+                  className={`dish-card${pickedNow ? " picked" : ""}${off ? " off" : ""}`}
                   onClick={() => toggleDish(d)}
                 >
                   <span className="dish-code">{d.maMon}</span>
@@ -250,162 +542,25 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
         </section>
 
         <section className="card">
-          <div className="card-title">{mode === "create" ? "Đơn hàng mới" : "Thông tin đơn hàng"}</div>
-          <div className="kv-row">
-            <label>Mã đơn hàng</label>
-            <input className="input" value={code} readOnly />
+          <div className="card-title order-new-title">
+            <span>Đơn hàng mới</span>
+            <span className="muted small">Mã đơn hàng: {code}</span>
           </div>
-          {meta && (
-            <div className="kv-row">
-              <label>Thời gian tạo</label>
-              <div className="plain">
-                {formatDateTime(meta.thoiGianTao)} · Mã nhân viên {meta.maNhanVien}
-              </div>
-            </div>
-          )}
-
-          <div className="table-scroll">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>MÃ MÓN</th>
-                  <th>TÊN MÓN</th>
-                  <th>SỐ LƯỢNG</th>
-                  <th className="num">GIÁ BÁN</th>
-                  <th className="num">THÀNH TIỀN</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((l) => {
-                  const q = validQty(l.soLuong);
-                  const err = errs[`q:${l.maMon}`];
-                  return (
-                    <tr key={l.maMon}>
-                      <td>{l.maMon}</td>
-                      <td>{l.tenMon}</td>
-                      <td className="qty-cell">
-                        <input
-                          className={`input qty${err ? " input-error" : ""}`}
-                          value={l.soLuong}
-                          placeholder="Nhập số lượng"
-                          inputMode="numeric"
-                          disabled={lockedForStaff}
-                          aria-label={`Số lượng ${l.tenMon}`}
-                          onChange={(e) => setQty(l.maMon, e.target.value)}
-                        />
-                        {err && <div className="err">{err}</div>}
-                      </td>
-                      <td className="num">{formatVnd(l.donGia)}</td>
-                      <td className="num">{q ? formatVnd(q * l.donGia) : "—"}</td>
-                    </tr>
-                  );
-                })}
-                {!lines.length && (
-                  <tr>
-                    <td colSpan={5} className="empty">
-                      Chưa có món nào được chọn
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          {linesTable}
           {errs.items && <div className="err">{errs.items}</div>}
 
           <div className="sum-row">
             <span>Tổng tiền</span>
             <b>{formatVnd(total)}</b>
           </div>
-          <div className="kv-row">
-            <label htmlFor="giamgia">Giảm giá (đ)</label>
-            <div className="grow">
-              <input
-                id="giamgia"
-                className={`input${errs.giamGia ? " input-error" : ""}`}
-                value={giamGia}
-                placeholder="0"
-                inputMode="numeric"
-                disabled={lockedForStaff}
-                onChange={(e) => {
-                  setGiamGia(e.target.value);
-                  setErrs((x) => ({ ...x, giamGia: "" }));
-                }}
-              />
-              {errs.giamGia && <div className="err">{errs.giamGia}</div>}
-            </div>
-          </div>
+          {discountField}
           <div className="sum-row grand">
             <span>Tổng thanh toán</span>
             <b>{formatVnd(payable)}</b>
           </div>
-
-          <div className="kv-row">
-            <label>Nguồn đơn hàng</label>
-            <Segmented
-              value={nguon}
-              disabled={lockedForStaff}
-              options={NGUON.map((label, value) => ({ value, label }))}
-              onChange={(v) => {
-                setNguon(v);
-                if (v !== 0) setPhuongThuc(1);
-              }}
-            />
-          </div>
-          <div className="kv-row">
-            <label>Phương thức thanh toán</label>
-            <Segmented
-              value={delivery ? 1 : phuongThuc}
-              disabled={lockedForStaff || delivery}
-              options={[
-                { value: 0, label: "Tiền mặt" },
-                { value: 1, label: "QR code" },
-              ]}
-              onChange={setPhuongThuc}
-            />
-          </div>
-          <div className="kv-row">
-            <label>Trạng thái thanh toán</label>
-            <Segmented
-              value={thanhToan}
-              disabled={lockedForStaff}
-              options={[
-                { value: 0, label: "Chưa thanh toán" },
-                { value: 1, label: "Đã thanh toán" },
-              ]}
-              onChange={setThanhToan}
-            />
-          </div>
-          {mode === "edit" && (
-            <div className="kv-row">
-              <label htmlFor="ttdon">Trạng thái đơn hàng</label>
-              <select id="ttdon" className="input" value={trangThaiDon} onChange={(e) => setTrangThaiDon(Number(e.target.value))}>
-                {statusOptions.map((v) => (
-                  <option key={v} value={v}>
-                    {TRANG_THAI_DON[v]}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          <div className="kv-row top">
-            <label htmlFor="ghichu">Ghi chú</label>
-            <textarea
-              id="ghichu"
-              className="input"
-              rows={2}
-              maxLength={200}
-              value={ghiChu}
-              disabled={lockedForStaff}
-              onChange={(e) => setGhiChu(e.target.value)}
-            />
-          </div>
-
+          {choiceFields}
+          {noteField}
           <div className="form-actions">
-            {mode === "edit" && (
-              <button type="button" className="btn btn-light" onClick={() => nav("/orders")}>
-                Quay lại
-              </button>
-            )}
             <button type="button" className="btn btn-primary" disabled={busy} onClick={save}>
               Lưu
             </button>

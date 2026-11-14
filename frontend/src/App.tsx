@@ -10,7 +10,6 @@ import RevenueCompare from "./pages/RevenueCompare";
 import Employees from "./pages/Employees";
 import Shifts from "./pages/Shifts";
 import Accounts from "./pages/Accounts";
-import AccountForm from "./pages/AccountForm";
 
 function Protected() {
   const { user, loading } = useAuth();
@@ -40,8 +39,6 @@ export default function App() {
           <Route path="/employees" element={<Employees />} />
           <Route path="/shifts" element={<Shifts />} />
           <Route path="/accounts" element={<Accounts />} />
-          <Route path="/accounts/new" element={<AccountForm mode="create" />} />
-          <Route path="/accounts/:ma/edit" element={<AccountForm mode="edit" />} />
         </Route>
         <Route path="*" element={<Navigate to="/orders" replace />} />
       </Route>

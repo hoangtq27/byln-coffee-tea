@@ -1,7 +1,7 @@
 import { formatVnd } from "../lib/format";
 
-const BROWN = "#6b4226";
-const TAN = "#d8c4a8";
+const BROWN = "#402b21";
+const TAN = "#d9c9b4";
 
 function shortMoney(n: number): string {
   if (n >= 1e9) return `${+(n / 1e9).toFixed(1)} tỷ`;
@@ -14,21 +14,25 @@ function shortMoney(n: number): string {
 export function BarChart({ data }: { data: { label: string; value: number }[] }) {
   const max = Math.max(...data.map((d) => d.value), 0);
   const maxIdx = max > 0 ? data.findIndex((d) => d.value === max) : -1;
-  const barW = 26, gap = 10, padL = 52, padB = 34, padT = 12, h = 240;
+  const n = data.length;
+  // Figma: cột rộng 44px; nhiều mốc thì thu hẹp cột để vừa khung, quá nhiều thì cuộn ngang
+  const barW = n <= 10 ? 44 : n <= 16 ? 32 : 22, gap = n <= 10 ? 54 : barW * 0.6, padL = 70, padB = 44, padT = 16, h = 320;
   const w = padL + data.length * (barW + gap) + gap;
   const plotH = h - padB - padT;
   const ticks = [0, 0.25, 0.5, 0.75, 1];
   const labelEvery = Math.max(1, Math.ceil(data.length / 16));
+  const vw = Math.max(w, 820);
+  const fit = vw <= 1250; // vừa khung: co giãn theo chiều rộng thẻ
 
   return (
     <div className="chart-scroll">
-      <svg width={Math.max(w, 320)} height={h} role="img" aria-label="Biểu đồ doanh thu">
+      <svg viewBox={`0 0 ${vw} ${h}`} style={fit ? { width: "100%", height: "auto" } : { width: vw, height: h }} role="img" aria-label="Biểu đồ doanh thu">
         {ticks.map((t) => {
           const y = padT + plotH * (1 - t);
           return (
             <g key={t}>
-              <line x1={padL} x2={Math.max(w, 320)} y1={y} y2={y} stroke="#eadfce" strokeDasharray={t === 0 ? "" : "3 3"} />
-              <text x={padL - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#8a7664">
+              <line x1={padL} x2={vw} y1={y} y2={y} stroke="#e3dbd1" strokeDasharray={t === 0 ? "" : "3 3"} />
+              <text x={padL - 8} y={y + 4} textAnchor="end" fontSize="16" fill="#7a7066">
                 {shortMoney(max * t)}
               </text>
             </g>
@@ -43,7 +47,7 @@ export function BarChart({ data }: { data: { label: string; value: number }[] })
                 <title>{`${d.label}: ${formatVnd(d.value)}`}</title>
               </rect>
               {i % labelEvery === 0 && (
-                <text x={x + barW / 2} y={h - 14} textAnchor="middle" fontSize="11" fill="#6f5b4a">
+                <text x={x + barW / 2} y={h - 14} textAnchor="middle" fontSize="16" fill="#7a7066">
                   {d.label}
                 </text>
               )}

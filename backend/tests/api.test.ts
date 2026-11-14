@@ -355,4 +355,18 @@ describe("Ca làm", () => {
     expect(v.find((i: any) => i.maNhanVien === "NV004" && i.maCaLam === 1).trangThai).toBe(2);
     expect(v.find((i: any) => i.maNhanVien === "NV005" && i.maCaLam === 1).trangThai).toBe(1);
   });
+  it("sửa khung giờ ca -> chuyển sang mã ca mới với khung giờ đã sửa", async () => {
+    await request(app).post("/api/shifts").set(A(mgr)).send({ from: "2026-11-25", to: "2026-11-25", gioBatDau: "07:00", gioKetThuc: "12:00", employees: ["NV006"] }).expect(201);
+    const before = (await request(app).get("/api/shifts/types").set(A(mgr))).body.items.map((t: any) => t.maCaLam);
+    await request(app).put("/api/shifts/1/2026-11-25").set(A(mgr)).send({ gioBatDau: "12:00", gioKetThuc: "13:00" }).expect(200);
+    const v = (await request(app).get("/api/shifts").query({ from: "2026-11-25", to: "2026-11-25" }).set(A(mgr))).body.items;
+    expect(v).toHaveLength(1);
+    expect(v[0].gioBatDau).toBe("12:00");
+    expect(v[0].gioKetThuc).toBe("13:00");
+    expect(before).not.toContain(v[0].maCaLam); // mã ca mới (tăng lên)
+    expect(v[0].maCaLam).toBeGreaterThan(Math.max(...before));
+    // CA01 (07:00-12:00) của các ngày khác không bị đổi
+    const other = (await request(app).get("/api/shifts").query({ from: "2026-11-12", to: "2026-11-12" }).set(A(mgr))).body.items;
+    expect(other.find((i: any) => i.maCaLam === 1).gioBatDau).toBe("07:00");
+  });
 });

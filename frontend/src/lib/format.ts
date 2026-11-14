@@ -1,3 +1,6 @@
+/** Số tiền không kèm đơn vị (bảng danh sách đơn hàng theo Figma: "32.000") */
+export const formatMoney = (n: number): string => Math.round(n).toLocaleString("vi-VN");
+
 export const formatVnd = (n: number): string => `${Math.round(n).toLocaleString("vi-VN")} đ`;
 
 /** "2026-11-12" -> "12/11/2026" */

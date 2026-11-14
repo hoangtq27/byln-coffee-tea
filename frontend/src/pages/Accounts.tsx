@@ -5,6 +5,7 @@ import { ConfirmDialog } from "../components/Modal";
 import { useToast } from "../components/Toast";
 import { ApiError, del, get, post } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import AccountForm from "./AccountForm";
 
 export interface Account {
   maTaiKhoan: string;
@@ -24,6 +25,8 @@ export default function Accounts() {
   const [loading, setLoading] = useState(true);
   const [toDelete, setToDelete] = useState<Account | null>(null);
   const [busy, setBusy] = useState(false);
+  // Hộp thoại Tạo / Sửa tài khoản: undefined = đóng, null = tạo mới
+  const [editing, setEditing] = useState<Account | null | undefined>(undefined);
 
   const load = useCallback(async () => {
     try {
@@ -86,7 +89,7 @@ export default function Accounts() {
       crumbs={["Quản lý tài khoản"]}
       title="Quản lý tài khoản"
       actions={
-        <button type="button" className="btn btn-primary" onClick={() => nav("/accounts/new")}>
+        <button type="button" className="btn btn-primary" onClick={() => setEditing(null)}>
           + Tạo tài khoản
         </button>
       }
@@ -118,7 +121,7 @@ export default function Accounts() {
                     <span className={`pill ${a.trangThai ? "pill-green" : "pill-red"}`}>{a.trangThai ? "Hoạt động" : "Khóa"}</span>
                   </td>
                   <td className="actions">
-                    <button type="button" className="link" onClick={() => nav(`/accounts/${a.maTaiKhoan}/edit`)}>Sửa</button>
+                    <button type="button" className="link" onClick={() => setEditing(a)}>Sửa</button>
                     <span className="sep">·</span>
                     <button type="button" className="link danger" onClick={() => setToDelete(a)}>Xóa</button>
                   </td>
@@ -133,6 +136,17 @@ export default function Accounts() {
           </table>
         </div>
       </section>
+
+      {editing !== undefined && (
+        <AccountForm
+          account={editing}
+          onClose={() => setEditing(undefined)}
+          onSaved={async () => {
+            setEditing(undefined);
+            await load();
+          }}
+        />
+      )}
 
       {toDelete && (
         <ConfirmDialog
