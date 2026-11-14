@@ -167,6 +167,9 @@ export default function Employees() {
       actions={
         draft ? (
           <>
+            <button type="button" className="btn btn-light" onClick={() => setDraft(null)}>
+              Hủy
+            </button>
             <button type="button" className="btn btn-primary" disabled={busy} onClick={save}>
               Lưu
             </button>
