@@ -108,12 +108,13 @@ async function writeLines(
   for (const [i, it] of items.entries()) {
     if (seen.has(it.maMon)) throw new HttpError(400, "Món bị trùng trong đơn hàng!");
     seen.add(it.maMon);
-    const { rows } = await t.query<{ GiaBan: number; TrangThai: number }>(
-      `SELECT "GiaBan","TrangThai" FROM mon WHERE "MaMon"=$1`,
+    const { rows } = await t.query<{ GiaBan: number; TrangThai: number; DaXoa: number }>(
+      `SELECT "GiaBan","TrangThai","DaXoa" FROM mon WHERE "MaMon"=$1`,
       [it.maMon],
     );
     const dish = rows[0];
-    if (!dish) throw new HttpError(400, "Món không tồn tại!", { [`items.${i}.maMon`]: "Món không tồn tại!" });
+    // Món đã xóa khỏi danh mục: chỉ được giữ lại ở dòng đã có sẵn trong đơn
+    if (!dish || (dish.DaXoa === 1 && !existing.has(it.maMon))) throw new HttpError(400, "Món không tồn tại!", { [`items.${i}.maMon`]: "Món không tồn tại!" });
     const kept = existing.get(it.maMon);
     if (dish.TrangThai !== 1 && kept === undefined) {
       const msg = isEdit ? "Món đã ngừng kinh doanh!" : "Món đã ngừng kinh doanh. Vui lòng chọn món khác!";

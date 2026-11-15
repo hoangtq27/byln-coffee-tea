@@ -216,7 +216,7 @@ export default function Employees() {
                     <td className="actions">
                       <button type="button" className="link" disabled={!!draft} onClick={() => startEdit(e)}>Sửa</button>
                       <span className="sep">·</span>
-                      <button type="button" className="link danger" disabled={!!draft} onClick={() => setToDelete(e)}>Xóa</button>
+                      <button type="button" className="link link-black" disabled={!!draft} onClick={() => setToDelete(e)}>Xóa</button>
                     </td>
                   </tr>
                 ),

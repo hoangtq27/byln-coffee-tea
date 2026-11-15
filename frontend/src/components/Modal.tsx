@@ -31,15 +31,18 @@ export function ConfirmDialog({
   detail,
   buttons,
   onClose,
+  stacked,
 }: {
   title: string;
   detail?: string;
+  /** Bố cục dọc (Figma "Xóa món"): biểu tượng trên, câu hỏi dưới, hàng nút bên dưới */
+  stacked?: boolean;
   buttons: ConfirmButton[];
   onClose: () => void;
 }) {
   return (
     <Modal onClose={onClose}>
-      <div className="confirm">
+      <div className={`confirm${stacked ? " stacked" : ""}`}>
         <div className="confirm-icon">?</div>
         <h3>{title}</h3>
         {detail && <p className="confirm-detail">{detail}</p>}

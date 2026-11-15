@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Dropdown } from "../components/Dropdown";
 import { Modal } from "../components/Modal";
 import { useToast } from "../components/Toast";
 import { ApiError, get, post, put } from "../lib/api";
@@ -13,6 +14,7 @@ interface Emp {
 }
 const SYS_ERR = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!";
 const PW_MSG = "Mật khẩu không đạt yêu cầu!";
+const HAS_ACC = "Nhân viên này đã có tài khoản!";
 
 function EyeIcon({ off }: { off: boolean }) {
   return (
@@ -25,7 +27,7 @@ function EyeIcon({ off }: { off: boolean }) {
 }
 
 /**
- * Hộp thoại Tạo / Sửa tài khoản (Figma: cửa sổ nổi trên nền làm mờ của màn Quản lý tài khoản).
+ * Hộp thoại Tạo / Sửa tài khoản (Figma "Tạo tài khoản", "Drop list Mã nhân viên", "Drop list Vai trò").
  * `account` = null -> tạo mới.
  */
 export default function AccountForm({ account, onClose, onSaved }: { account: Account | null; onClose: () => void; onSaved: () => void }) {
@@ -39,7 +41,7 @@ export default function AccountForm({ account, onClose, onSaved }: { account: Ac
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [maNv, setMaNv] = useState(account?.maNhanVien ?? "");
-  const [role, setRole] = useState<"staff" | "manager">(account?.vaiTro ?? "staff");
+  const [role, setRole] = useState<"" | "staff" | "manager">(account?.vaiTro ?? "");
   const [status, setStatus] = useState(account?.trangThai ?? 1);
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -55,6 +57,7 @@ export default function AccountForm({ account, onClose, onSaved }: { account: Ac
     if (!username.trim()) e.tenDangNhap = "Vui lòng nhập tên đăng nhập!";
     if (!edit && !password) e.matKhau = "Vui lòng nhập mật khẩu!";
     else if (password && (password.length < 6 || password.length > 50 || !/[@#!]/.test(password))) e.matKhau = PW_MSG;
+    if (!role) e.vaiTro = "Vui lòng chọn vai trò!";
     setErrs(e);
     return Object.keys(e).length === 0;
   };
@@ -80,133 +83,141 @@ export default function AccountForm({ account, onClose, onSaved }: { account: Ac
       onSaved();
     } catch (err) {
       if (err instanceof ApiError) {
-        setErrs(err.fields);
-        if (!Object.keys(err.fields).length) toast.error(err.message);
+        const { maNhanVien, ...rest } = err.fields;
+        setErrs(rest);
+        // Nhân viên đã có tài khoản: báo bằng thông báo trượt ngang (các điều kiện khác đã hợp lệ)
+        if (maNhanVien === HAS_ACC && !Object.keys(rest).length) toast.error(HAS_ACC);
+        else if (maNhanVien && !Object.keys(rest).length) toast.error(maNhanVien);
+        else if (!Object.keys(err.fields).length) toast.error(err.message);
       } else toast.error(SYS_ERR);
     } finally {
       setBusy(false);
     }
   };
 
+  const empOptions = emps.map((n) => ({
+    value: n.maNhanVien,
+    label: `${n.maNhanVien} · ${n.tenNhanVien}`,
+    node: (
+      <>
+        <span className="dd-code">{n.maNhanVien}</span>
+        <span className="dd-name">{n.tenNhanVien}</span>
+        {n.coTaiKhoan && n.maNhanVien !== (account?.maNhanVien ?? "") && <span className="dd-badge">Đã có tài khoản</span>}
+      </>
+    ),
+  }));
+
   return (
     <Modal onClose={onClose}>
-      <div className="modal-head">
-        <h3>{edit ? "Sửa thông tin tài khoản" : "Tạo tài khoản"}</h3>
-      </div>
-      <p className="modal-sub">{edit ? `Đang sửa tài khoản ${account.maTaiKhoan}` : "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống"}</p>
+      <div className="acc-form">
+        <h3 className="acc-title">{edit ? "Sửa thông tin tài khoản" : "Tạo tài khoản"}</h3>
+        <p className="modal-sub">{edit ? `Đang sửa tài khoản ${account.maTaiKhoan}` : "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống"}</p>
 
-      {edit && (
         <div className="form-row">
-          <label>Mã tài khoản</label>
-          <input className="input" value={account.maTaiKhoan} readOnly />
+          <label htmlFor="tdn">
+            Tên đăng nhập<span className="req">*</span>
+          </label>
+          <div className="count-wrap">
+            <input
+              id="tdn"
+              className={`input${errs.tenDangNhap ? " input-error" : ""}`}
+              value={username}
+              maxLength={20}
+              autoComplete="off"
+              placeholder="Ví dụ: mai.nv"
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setErrs((x) => ({ ...x, tenDangNhap: "" }));
+              }}
+            />
+            <span className="count-in">{username.length}/20</span>
+          </div>
+          <div className="hint-row">
+            <span>Tối đa 20 kí tự</span>
+            {errs.tenDangNhap && <span className="err-inline">{errs.tenDangNhap}</span>}
+          </div>
         </div>
-      )}
 
-      <div className="form-row">
-        <label htmlFor="tdn">
-          Tên đăng nhập <span className="req">*</span>
-        </label>
-        <div className="count-wrap">
-          <input
-            id="tdn"
-            className={`input${errs.tenDangNhap ? " input-error" : ""}`}
-            value={username}
-            maxLength={20}
-            autoComplete="off"
-            onChange={(e) => {
-              setUsername(e.target.value);
-              setErrs((x) => ({ ...x, tenDangNhap: "" }));
-            }}
-          />
-          <span className="count-in">{username.length}/20</span>
-        </div>
-        {errs.tenDangNhap ? <div className="err">{errs.tenDangNhap}</div> : <div className="hint-row"><span>Tối đa 20 kí tự</span></div>}
-      </div>
-
-      <div className="form-row">
-        <label htmlFor="mk">Mật khẩu {!edit && <span className="req">*</span>}</label>
-        <div className="pw-wrap">
-          <input
-            id="mk"
-            className={`input${errs.matKhau ? " input-error" : ""}`}
-            type={show ? "text" : "password"}
-            value={password}
-            maxLength={50}
-            autoComplete="new-password"
-            placeholder={edit ? "" : ""}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setErrs((x) => ({ ...x, matKhau: "" }));
-            }}
-          />
-          <button type="button" className="eye" onClick={() => setShow((s) => !s)} aria-label={show ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>
-            <EyeIcon off={show} />
-          </button>
-        </div>
-        {errs.matKhau ? (
-          <div className="err">{errs.matKhau}</div>
-        ) : (
+        <div className="form-row">
+          <label htmlFor="mk">Mật khẩu{!edit && <span className="req">*</span>}</label>
+          <div className="pw-wrap">
+            <input
+              id="mk"
+              className={`input${errs.matKhau ? " input-error" : ""}`}
+              type={show ? "text" : "password"}
+              value={password}
+              maxLength={50}
+              autoComplete="new-password"
+              placeholder="Nhập mật khẩu"
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrs((x) => ({ ...x, matKhau: "" }));
+              }}
+            />
+            <button type="button" className="eye" onClick={() => setShow((s) => !s)} aria-label={show ? "Ẩn mật khẩu" : "Hiện mật khẩu"}>
+              <EyeIcon off={show} />
+            </button>
+          </div>
           <div className="hint-row">
             <span>6-50 ký tự, có ít nhất 1 ký tự đặc biệt (@, #, !)</span>
+            {errs.matKhau && <span className="err-inline">{errs.matKhau}</span>}
           </div>
-        )}
-      </div>
-
-      <div className="choice">
-        <div className="form-row">
-          <label htmlFor="mnv">Mã nhân viên</label>
-          <select
-            id="mnv"
-            className={`input${errs.maNhanVien ? " input-error" : ""}`}
-            value={maNv}
-            onChange={(e) => {
-              setMaNv(e.target.value);
-              setErrs((x) => ({ ...x, maNhanVien: "" }));
-            }}
-          >
-            <option value="">— Không thuộc nhân viên nào —</option>
-            {emps.map((n) => {
-              const taken = n.coTaiKhoan && n.maNhanVien !== (account?.maNhanVien ?? "");
-              return (
-                <option key={n.maNhanVien} value={n.maNhanVien} disabled={taken}>
-                  {n.maNhanVien} {n.tenNhanVien}
-                  {taken ? " — Đã có tài khoản" : ""}
-                </option>
-              );
-            })}
-          </select>
-          {errs.maNhanVien && <div className="err">{errs.maNhanVien}</div>}
         </div>
-        <div className="form-row">
-          <label htmlFor="vt">
-            Vai trò <span className="req">*</span>
-          </label>
-          <select id="vt" className="input" value={role} onChange={(e) => setRole(e.target.value as "staff" | "manager")}>
-            <option value="staff">Nhân viên</option>
-            <option value="manager">Quản lý</option>
-          </select>
-        </div>
-      </div>
 
-      <div className="form-row">
-        <label>Trạng thái</label>
         <div className="choice">
-          <button type="button" className={`choice-btn${status === 1 ? " on" : ""}`} onClick={() => setStatus(1)}>
-            Hoạt động
+          <div className="form-row">
+            <label htmlFor="mnv">Mã nhân viên</label>
+            <Dropdown
+              id="mnv"
+              value={maNv}
+              placeholder="Chọn mã nhân viên"
+              options={empOptions}
+              listWidth={380}
+              onChange={(v) => setMaNv(v === maNv ? "" : v)}
+            />
+          </div>
+          <div className="form-row">
+            <label htmlFor="vt">
+              Vai trò<span className="req">*</span>
+            </label>
+            <Dropdown
+              id="vt"
+              value={role}
+              placeholder="Chọn vai trò"
+              error={!!errs.vaiTro}
+              options={[
+                { value: "staff", label: "Nhân viên" },
+                { value: "manager", label: "Quản lý" },
+              ]}
+              onChange={(v) => {
+                setRole(v as "staff" | "manager");
+                setErrs((x) => ({ ...x, vaiTro: "" }));
+              }}
+            />
+            {errs.vaiTro && <div className="err err-right">{errs.vaiTro}</div>}
+          </div>
+        </div>
+
+        <div className="form-row">
+          <label>Trạng thái</label>
+          <div className="choice">
+            <button type="button" className={`choice-btn${status === 1 ? " on" : ""}`} onClick={() => setStatus(1)}>
+              Hoạt động
+            </button>
+            <button type="button" className={`choice-btn${status === 0 ? " on" : ""}`} onClick={() => setStatus(0)}>
+              Khóa
+            </button>
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          <button type="button" className="btn btn-light" onClick={onClose}>
+            Hủy
           </button>
-          <button type="button" className={`choice-btn${status === 0 ? " on" : ""}`} onClick={() => setStatus(0)}>
-            Khóa
+          <button type="button" className="btn btn-primary" disabled={busy} onClick={submit}>
+            {edit ? "Lưu thay đổi" : "Tạo"}
           </button>
         </div>
-      </div>
-
-      <div className="modal-actions">
-        <button type="button" className="btn btn-light" onClick={onClose}>
-          Hủy
-        </button>
-        <button type="button" className="btn btn-primary" disabled={busy} onClick={submit}>
-          {edit ? "Lưu thay đổi" : "Tạo"}
-        </button>
       </div>
     </Modal>
   );

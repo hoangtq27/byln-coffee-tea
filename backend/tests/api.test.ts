@@ -95,7 +95,19 @@ describe("Quản lý món", () => {
     expect(c.body.item.maMon).toBe("M007");
     await request(app).put("/api/dishes/M007").set(A(mgr)).send({ tenMon: "Trà vải", giaBan: 41000, trangThai: 0 }).expect(200);
     await request(app).delete("/api/dishes/M007").set(A(mgr)).expect(200);
-    await request(app).delete("/api/dishes/M001").set(A(mgr)).expect(409);
+    // Món đã phát sinh đơn hàng vẫn xóa được; lịch sử đơn hàng giữ nguyên tên món
+    await request(app).delete("/api/dishes/M003").set(A(mgr)).expect(200);
+    const list = (await request(app).get("/api/dishes").set(A(mgr))).body.items.map((d: any) => d.maMon);
+    expect(list).not.toContain("M003");
+    await request(app).delete("/api/dishes/M003").set(A(mgr)).expect(404);
+    await request(app).post("/api/orders").set(A(staff)).send({ items: [{ maMon: "M003", soLuong: 1 }] }).expect(400);
+    const old = (await request(app).get("/api/orders").query({ limit: 500 }).set(A(mgr))).body.items;
+    let found = false;
+    for (const o of old.slice(0, 60)) {
+      const d = (await request(app).get(`/api/orders/${o.maDonHang}`).set(A(mgr))).body;
+      if (d.items.some((i: any) => i.maMon === "M003" && i.tenMon === "Americano")) { found = true; break; }
+    }
+    expect(found).toBe(true);
     const d = await request(app).post("/api/dishes/M002/discontinue").set(A(mgr)).expect(200);
     expect(d.body.item.trangThai).toBe(0);
     await request(app).put("/api/dishes/M002").set(A(mgr)).send({ tenMon: "Bạc xỉu", giaBan: 38000, trangThai: 1 }).expect(200);
@@ -346,6 +358,8 @@ describe("Ca làm", () => {
     expect((await mk({})).status).toBe(201);
     expect((await mk({ gioBatDau: "10:00", gioKetThuc: "14:00", employees: ["NV003"] })).body.message).toBe("Lịch làm việc bị trùng!");
     expect((await mk({ employees: ["NV005"] })).body.message).toBe("Mỗi ca làm chỉ có tối đa 2 nhân viên!");
+    // lập lại đúng ca cho nhân viên đã được phân công -> trùng lịch (không được nhận im lặng)
+    expect((await mk({ employees: ["NV003"] })).body.message).toBe("Lịch làm việc bị trùng!");
     // ca 12-17 cùng người: không trùng (liền kề)
     expect((await mk({ gioBatDau: "12:00", gioKetThuc: "17:00", employees: ["NV003"] })).status).toBe(201);
     // sửa: thay NV004 bằng NV005 ở ca 1 ngày 20/11

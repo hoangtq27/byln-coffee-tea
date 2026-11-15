@@ -61,14 +61,14 @@ async function assertSchedulable(
          AND c."GioBatDau" < $5::time AND c."GioKetThuc" > $4::time`,
       [emp, date, shiftId, start, end, ignoreShiftId ?? null],
     );
-    if (rows.length) throw new HttpError(409, MSG.overlap);
+    if (rows.length) throw new HttpError(409, MSG.overlap, { employees: MSG.overlap });
   }
   const { rows } = await t.query<{ n: string }>(
     `SELECT "MaNhanVien" AS n FROM phancongca WHERE "MaCaLam"=$1 AND "NgayLam"=$2::date AND "TrangThai"=1`,
     [shiftId, date],
   );
   const union = new Set([...rows.map((r) => r.n.trim()), ...employees]);
-  if (union.size > MAX_PER_SHIFT) throw new HttpError(409, MSG.full);
+  if (union.size > MAX_PER_SHIFT) throw new HttpError(409, MSG.full, { employees: MSG.full });
 }
 
 const shiftLabel = (start: string) => {
@@ -148,6 +148,12 @@ shiftsRouter.post(
         throw new HttpError(400, "Chỉ có thể phân công nhân viên đang còn làm!", { employees: "Chỉ có thể phân công nhân viên đang còn làm!" });
       const shiftId = await resolveShiftId(t, start, end);
       for (const day of eachDay(b.from!, b.to!)) {
+        // Nhân viên đã được phân công đúng ca này trong ngày -> trùng lịch
+        const dup = await t.query(
+          `SELECT 1 FROM phancongca WHERE "MaCaLam"=$1 AND "NgayLam"=$2::date AND "TrangThai"=1 AND "MaNhanVien" = ANY($3::text[])`,
+          [shiftId, day, employees],
+        );
+        if (dup.rows.length) throw new HttpError(409, MSG.overlap, { employees: MSG.overlap });
         await assertSchedulable(t, day, shiftId, start, end, employees);
         for (const emp of employees) {
           await t.query(
@@ -216,7 +222,7 @@ shiftsRouter.put(
           `SELECT 1 FROM phancongca WHERE "MaCaLam"=$1 AND "NgayLam"=$2::date AND "MaNhanVien" = ANY($3::text[])`,
           [newShiftId, ngay, finalActive],
         );
-        if (clash.rows.length) throw new HttpError(409, MSG.overlap);
+        if (clash.rows.length) throw new HttpError(409, MSG.overlap, { employees: MSG.overlap });
         await t.query(`UPDATE phancongca SET "MaCaLam"=$3 WHERE "MaCaLam"=$1 AND "NgayLam"=$2::date`, [
           maCaLam,
           ngay,

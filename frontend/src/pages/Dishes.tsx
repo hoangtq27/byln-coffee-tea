@@ -37,7 +37,11 @@ export default function Dishes() {
       setLoading(true);
       try {
         const r = await get<{ items: Dish[] }>("/dishes", { q });
-        if (id === seq.current) setItems(r.items);
+        if (id === seq.current) {
+          setItems(r.items);
+          // Không tìm thấy: báo bằng thông báo trượt ngang, bảng chỉ còn 1 dòng trống
+          if (q.trim() && !r.items.length) toast.error("Không tìm thấy món!");
+        }
       } catch (e) {
         if (id === seq.current) toast.error(e instanceof ApiError ? e.message : SYS_ERR);
       } finally {
@@ -168,25 +172,22 @@ export default function Dishes() {
         <button type="submit" className="btn btn-light">
           Tìm kiếm
         </button>
-        {query && (
-          <button
-            type="button"
-            className="btn btn-light"
-            onClick={() => {
-              setInput("");
-              setQuery("");
-              setSearchErr("");
-            }}
-          >
-            Xóa tìm kiếm
-          </button>
-        )}
         <div className="spacer" />
-        {isMgr && (
-          <button type="button" className="btn btn-primary" disabled={editing} onClick={startAdd}>
-            + Thêm món
-          </button>
-        )}
+        {isMgr &&
+          (editing ? (
+            <>
+              <button type="button" className="btn btn-light btn-wide" onClick={() => setDraft(null)}>
+                Hủy
+              </button>
+              <button type="button" className="btn btn-primary btn-wide" disabled={busy} onClick={save}>
+                Lưu
+              </button>
+            </>
+          ) : (
+            <button type="button" className="btn btn-primary" onClick={startAdd}>
+              + Thêm món
+            </button>
+          ))}
       </form>
 
       <section className="card">
@@ -221,10 +222,7 @@ export default function Dishes() {
                         <option value={0}>Ngừng bán</option>
                       </select>
                     </td>
-                    <td className="actions">
-                      <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={save}>Lưu</button>
-                      <button type="button" className="btn btn-light btn-sm" onClick={() => setDraft(null)}>Hủy</button>
-                    </td>
+                    <td className="actions" />
                   </tr>
                 ) : (
                   <tr key={d.maMon}>
@@ -238,7 +236,7 @@ export default function Dishes() {
                       <td className="actions">
                         <button type="button" className="link" disabled={editing} onClick={() => startEdit(d)}>Sửa</button>
                         <span className="sep">·</span>
-                        <button type="button" className="link danger" disabled={editing} onClick={() => setToDelete(d)}>Xóa</button>
+                        <button type="button" className="link link-black" disabled={editing} onClick={() => setToDelete(d)}>Xóa</button>
                       </td>
                     )}
                   </tr>
@@ -261,15 +259,14 @@ export default function Dishes() {
                       <option value={0}>Ngừng bán</option>
                     </select>
                   </td>
-                  <td className="actions">
-                    <button type="button" className="btn btn-primary btn-sm" disabled={busy} onClick={save}>Lưu</button>
-                    <button type="button" className="btn btn-light btn-sm" onClick={() => setDraft(null)}>Hủy</button>
-                  </td>
+                  <td className="actions" />
                 </tr>
               )}
               {!loading && !items.length && (
                 <tr>
-                  <td colSpan={isMgr ? 5 : 4} className="empty">Không tìm thấy món!</td>
+                  {Array.from({ length: isMgr ? 5 : 4 }, (_, i) => (
+                    <td key={i}>&nbsp;</td>
+                  ))}
                 </tr>
               )}
             </tbody>
@@ -280,12 +277,12 @@ export default function Dishes() {
       {toDelete && (
         <ConfirmDialog
           title="Bạn có chắc chắn muốn xóa món này không?"
-          detail={`${toDelete.tenMon} (${toDelete.maMon})`}
+          stacked
           onClose={() => setToDelete(null)}
           buttons={[
             { label: "Hủy", onClick: () => setToDelete(null) },
             { label: "Chuyển trạng thái ngừng bán", disabled: busy || toDelete.trangThai === 0, onClick: discontinue },
-            { label: "Xác nhận", variant: "danger", disabled: busy, onClick: confirmDelete },
+            { label: "Xác nhận", variant: "primary", disabled: busy, onClick: confirmDelete },
           ]}
         />
       )}

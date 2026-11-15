@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { DateInput } from "../components/DateInput";
+import { Dropdown } from "../components/Dropdown";
 import { Page } from "../components/Layout";
 import { Modal } from "../components/Modal";
 import { useToast } from "../components/Toast";
@@ -29,12 +30,18 @@ interface Emp {
 }
 type View = "day" | "week" | "month";
 const STATUS: Record<number, string> = { 1: "Được phân công", 2: "Đã đổi", 0: "Hủy" };
+const STATUS_PILL: Record<number, string> = { 1: "pill-green", 2: "pill-amber", 0: "pill-red" };
 const DOW = ["THỨ HAI", "THỨ BA", "THỨ TƯ", "THỨ NĂM", "THỨ SÁU", "THỨ BẢY", "CHỦ NHẬT"];
+const DOW_NAME = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
 const SYS_ERR = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!";
 /** Mã ca hiển thị dạng CA01, CA02, ... */
 export const caCode = (n: number) => `CA${String(n).padStart(2, "0")}`;
-const shiftLabel = (a: { maCaLam: number; tenCa: string; gioBatDau: string; gioKetThuc: string }) =>
-  `${caCode(a.maCaLam)} · ${a.tenCa} | ${a.gioBatDau} – ${a.gioKetThuc}`;
+const shiftName = (start: string) => {
+  const h = Number(start.slice(0, 2));
+  return h < 12 ? "Ca sáng" : h < 17 ? "Ca chiều" : "Ca tối";
+};
+/** "2026-11-09" -> "Thứ Hai, 09/11/2026" */
+const dayLong = (iso: string) => `${DOW_NAME[new Date(`${iso}T00:00:00Z`).getUTCDay()]}, ${formatDate(iso)}`;
 
 function rangeFor(view: View, date: string): [string, string] {
   if (view === "day") return [date, date];
@@ -43,6 +50,15 @@ function rangeFor(view: View, date: string): [string, string] {
     return [m, addDaysIso(m, 6)];
   }
   return [mondayOf(monthStart(date)), addDaysIso(mondayOf(monthEnd(date)), 6)];
+}
+
+function ClockIcon() {
+  return (
+    <svg className="in-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
 }
 
 export default function Shifts() {
@@ -74,66 +90,55 @@ export default function Shifts() {
     load();
   }, [load]);
 
+  const loadTypes = useCallback(() => get<{ items: ShiftType[] }>("/shifts/types").then((t) => setTypes(t.items)), []);
+
   useEffect(() => {
-    Promise.all([get<{ items: ShiftType[] }>("/shifts/types"), get<{ items: Emp[] }>("/employees")])
-      .then(([t, e]) => {
-        setTypes(t.items);
-        setEmps(e.items);
-      })
-      .catch((e) => toast.error(e instanceof ApiError ? e.message : SYS_ERR));
-  }, [toast]);
+    Promise.all([loadTypes(), get<{ items: Emp[] }>("/employees").then((e) => setEmps(e.items))]).catch((e) =>
+      toast.error(e instanceof ApiError ? e.message : SYS_ERR),
+    );
+  }, [toast, loadTypes]);
 
-  const shift = (delta: number) => {
-    if (view === "day") setDate(addDaysIso(date, delta));
-    else if (view === "week") setDate(addDaysIso(date, 7 * delta));
-    else {
-      const y = Number(date.slice(0, 4)), m = Number(date.slice(5, 7)) - 1 + delta;
-      const ny = y + Math.floor(m / 12), nm = ((m % 12) + 12) % 12 + 1;
-      setDate(`${ny}-${String(nm).padStart(2, "0")}-01`);
-    }
-  };
-
-  const label =
-    view === "day" ? formatDate(date) : view === "week" ? `${formatDate(from)} – ${formatDate(to)}` : `Tháng ${Number(date.slice(5, 7))}/${date.slice(0, 4)}`;
+  // Tiêu đề khung lịch (Figma: "Lịch làm việc tuần 09/11 – 15/11/2026")
+  const title =
+    view === "day"
+      ? `Lịch làm việc ngày ${formatDate(date)}`
+      : view === "week"
+        ? `Lịch làm việc tuần ${formatDate(from).slice(0, 5)} – ${formatDate(to)}`
+        : `Lịch làm việc tháng ${date.slice(5, 7)}/${date.slice(0, 4)}`;
 
   return (
-    <Page
-      crumbs={["Quản lý nhân viên", "Quản lý ca làm"]}
-      title="Quản lý ca làm"
-    >
-      <div className="toolbar">
-        <div className="seg">
+    <Page crumbs={["Quản lý nhân viên", "Quản lý ca làm"]} title="Quản lý ca làm">
+      <div className="toolbar shift-toolbar">
+        <div className="view-box">
           {(["day", "week", "month"] as View[]).map((v) => (
-            <button key={v} type="button" className={`seg-btn${view === v ? " on" : ""}`} onClick={() => setView(v)}>
+            <button key={v} type="button" className={`view-btn${view === v ? " on" : ""}`} onClick={() => setView(v)}>
               {v === "day" ? "Ngày" : v === "week" ? "Tuần" : "Tháng"}
             </button>
           ))}
         </div>
-        <button type="button" className="btn btn-light btn-sm" onClick={() => shift(-1)} aria-label="Trước">‹</button>
-        <div className="date-w">
-          <DateInput value={date} onChange={(v) => v && setDate(v)} />
-        </div>
-        <button type="button" className="btn btn-light btn-sm" onClick={() => shift(1)} aria-label="Sau">›</button>
-        <div className="range-label">{label}</div>
+        <DateInput variant="icon" value={date} onChange={(v) => v && setDate(v)} />
         <div className="spacer" />
         <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
           + Lập lịch làm việc
         </button>
       </div>
 
-      {view === "day" && <DayView items={items} loading={loading} onOpen={(a) => setEditing({ maCaLam: a.maCaLam, ngay: a.ngayLam })} />}
-      {view === "week" && <WeekView items={items} types={types} from={from} onOpen={(ma, ngay) => setEditing({ maCaLam: ma, ngay })} />}
-      {view === "month" && (
-        <MonthView
-          items={items}
-          from={from}
-          month={date.slice(0, 7)}
-          onPick={(d) => {
-            setDate(d);
-            setView("day");
-          }}
-        />
-      )}
+      <section className="card">
+        <div className="card-title">{title}</div>
+        {view === "day" && <DayView items={items} loading={loading} onOpen={(a) => setEditing({ maCaLam: a.maCaLam, ngay: a.ngayLam })} />}
+        {view === "week" && <WeekView items={items} types={types} from={from} onOpen={(ma, ngay) => setEditing({ maCaLam: ma, ngay })} />}
+        {view === "month" && (
+          <MonthView
+            items={items}
+            from={from}
+            month={date.slice(0, 7)}
+            onPick={(d) => {
+              setDate(d);
+              setView("day");
+            }}
+          />
+        )}
+      </section>
 
       {creating && (
         <CreateDialog
@@ -144,7 +149,7 @@ export default function Shifts() {
             setCreating(false);
             toast.success("Lập lịch làm việc thành công");
             setDate(d);
-            await Promise.all([load(), get<{ items: ShiftType[] }>("/shifts/types").then((t) => setTypes(t.items))]);
+            await Promise.all([load(), loadTypes()]);
           }}
         />
       )}
@@ -157,7 +162,7 @@ export default function Shifts() {
           onDone={async () => {
             setEditing(null);
             toast.success("Đã sửa thành công");
-            await Promise.all([load(), get<{ items: ShiftType[] }>("/shifts/types").then((t) => setTypes(t.items))]);
+            await Promise.all([load(), loadTypes()]);
           }}
         />
       )}
@@ -167,44 +172,43 @@ export default function Shifts() {
 
 function DayView({ items, loading, onOpen }: { items: Asg[]; loading: boolean; onOpen: (a: Asg) => void }) {
   return (
-    <section className="card">
-      <div className="card-title">Lịch làm việc</div>
-      <div className="table-scroll">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>MÃ NHÂN VIÊN</th>
-              <th>TÊN NHÂN VIÊN</th>
-              <th>MÃ CA LÀM</th>
-              <th>NGÀY LÀM</th>
-              <th>GIỜ BẮT ĐẦU</th>
-              <th>GIỜ KẾT THÚC</th>
-              <th>TRẠNG THÁI</th>
+    <div className="table-scroll">
+      <table className="table">
+        <thead>
+          <tr>
+            <th>MÃ NHÂN VIÊN</th>
+            <th>TÊN NHÂN VIÊN</th>
+            <th>MÃ CA LÀM</th>
+            <th>NGÀY LÀM</th>
+            <th>GIỜ BẮT ĐẦU</th>
+            <th>GIỜ KẾT THÚC</th>
+            <th>TRẠNG THÁI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((a) => (
+            <tr key={`${a.maCaLam}${a.maNhanVien}`} className="clickable" onClick={() => onOpen(a)}>
+              <td>{a.maNhanVien}</td>
+              <td>{a.tenNhanVien}</td>
+              <td>{caCode(a.maCaLam)}</td>
+              <td>{formatDate(a.ngayLam)}</td>
+              <td>{a.gioBatDau}</td>
+              <td>{a.gioKetThuc}</td>
+              <td>
+                <span className={`pill ${STATUS_PILL[a.trangThai]}`}>{STATUS[a.trangThai]}</span>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {items.map((a) => (
-              <tr key={`${a.maCaLam}${a.maNhanVien}`} className="clickable" onClick={() => onOpen(a)}>
-                <td className="strong">{a.maNhanVien}</td>
-                <td>{a.tenNhanVien}</td>
-                <td>{caCode(a.maCaLam)}</td>
-                <td>{formatDate(a.ngayLam)}</td>
-                <td>{a.gioBatDau}</td>
-                <td>{a.gioKetThuc}</td>
-                <td>
-                  <span className={`pill ${a.trangThai === 1 ? "pill-green" : a.trangThai === 2 ? "pill-amber" : "pill-red"}`}>{STATUS[a.trangThai]}</span>
-                </td>
-              </tr>
-            ))}
-            {!loading && !items.length && (
-              <tr>
-                <td colSpan={7} className="empty">Chưa có lịch làm việc trong ngày này</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          ))}
+          {!loading && !items.length && (
+            <tr>
+              <td colSpan={7} className="empty">
+                Chưa lập lịch
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -214,48 +218,53 @@ function WeekView({ items, types, from, onOpen }: { items: Asg[]; types: ShiftTy
     const map = new Map<number, ShiftType>();
     types.forEach((t) => map.set(t.maCaLam, t));
     items.forEach((a) => !map.has(a.maCaLam) && map.set(a.maCaLam, { maCaLam: a.maCaLam, gioBatDau: a.gioBatDau, gioKetThuc: a.gioKetThuc, ten: a.tenCa }));
-    return [...map.values()].sort((a, b) => a.gioBatDau.localeCompare(b.gioBatDau));
+    // Chỉ hiển thị ca chuẩn + ca có phân công trong tuần
+    const used = new Set(items.map((a) => a.maCaLam));
+    return [...map.values()].filter((t) => t.maCaLam <= 3 || used.has(t.maCaLam)).sort((a, b) => a.gioBatDau.localeCompare(b.gioBatDau) || a.maCaLam - b.maCaLam);
   }, [items, types]);
 
   return (
-    <section className="card">
-      <div className="card-title">Lịch làm việc theo tuần</div>
-      <div className="table-scroll">
-        <table className="table week">
-          <thead>
-            <tr>
-              <th>CA LÀM</th>
-              {days.map((d, i) => (
-                <th key={d}>
-                  {DOW[i]}
-                  <div className="sub">{formatDate(d).slice(0, 5)}</div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.maCaLam}>
-                <td className="shift-cell">
-                  <b>{`${caCode(r.maCaLam)} · ${r.ten}`}</b>
-                  <div className="muted small">{`${r.gioBatDau} – ${r.gioKetThuc}`}</div>
-                </td>
-                {days.map((d) => {
-                  const here = items.filter((a) => a.maCaLam === r.maCaLam && a.ngayLam === d && a.trangThai === 1);
-                  return (
-                    <td key={d} className={here.length ? "cell-has" : ""} onClick={() => here.length && onOpen(r.maCaLam, d)}>
-                      {here.map((a) => (
-                        <div key={a.maNhanVien} className="chip">{a.tenNhanVien}</div>
-                      ))}
-                    </td>
-                  );
-                })}
-              </tr>
+    <div className="table-scroll">
+      <table className="table week">
+        <thead>
+          <tr>
+            <th>CA LÀM</th>
+            {days.map((d, i) => (
+              <th key={d} className="center">
+                {DOW[i]}
+                <div className="sub">{formatDate(d).slice(0, 5)}</div>
+              </th>
             ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.maCaLam}>
+              <td className="shift-cell">
+                <b>{`${caCode(r.maCaLam)} · ${r.ten}`}</b>
+                <div className="muted small">{`${r.gioBatDau} – ${r.gioKetThuc}`}</div>
+              </td>
+              {days.map((d) => {
+                const here = items.filter((a) => a.maCaLam === r.maCaLam && a.ngayLam === d && a.trangThai !== 0);
+                return (
+                  <td key={d} className={here.length ? "cell-has" : ""} onClick={() => here.length && onOpen(r.maCaLam, d)}>
+                    {here.length ? (
+                      here.map((a) => (
+                        <div key={a.maNhanVien} className={`chip chip-s${a.trangThai}`}>
+                          {a.tenNhanVien}
+                        </div>
+                      ))
+                    ) : (
+                      <span className="unassigned">Chưa phân công</span>
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -276,31 +285,26 @@ function MonthView({ items, from, month, onPick }: { items: Asg[]; from: string;
   const today = todayIso();
 
   return (
-    <section className="card">
-      <div className="card-title">Lịch làm việc theo tháng</div>
-      <div className="table-scroll">
-        <div className="month-grid">
-          {DOW.map((d) => (
-            <div key={d} className="month-dow">{d}</div>
-          ))}
-          {cells.map((d) => {
-            const s = stat.get(d);
-            const inMonth = d.startsWith(month);
-            return (
-              <button key={d} type="button" className={`month-cell${inMonth ? "" : " out"}${d === today ? " today" : ""}`} onClick={() => onPick(d)}>
-                <span className="month-day">{Number(d.slice(8, 10))}</span>
-                {s && (
-                  <>
-                    <span className="month-line">{s.shifts.size} ca</span>
-                    <span className="month-line">{s.n} lượt phân công</span>
-                  </>
-                )}
-              </button>
-            );
-          })}
-        </div>
+    <div className="table-scroll">
+      <div className="month-grid">
+        {DOW.map((d) => (
+          <div key={d} className="month-dow">
+            {d}
+          </div>
+        ))}
+        {cells.map((d) => {
+          const s = stat.get(d);
+          const inMonth = d.startsWith(month);
+          return (
+            <button key={d} type="button" className={`month-cell${inMonth ? "" : " out"}${d === today ? " today" : ""}`} onClick={() => onPick(d)}>
+              <span className="month-day">{Number(d.slice(8, 10))}</span>
+              {inMonth &&
+                (s ? <span className="month-badge">{`${s.shifts.size} ca · ${s.n} lượt`}</span> : <span className="month-none">Chưa lập lịch</span>)}
+            </button>
+          );
+        })}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -316,50 +320,57 @@ const validRange = (s: string, e: string) => HHMM.test(s) && HHMM.test(e) && toM
 /** Nhãn trường bắt buộc (dấu * đỏ như Figma). */
 const Req = ({ children }: { children: string }) => (
   <label>
-    {children} <span className="req">*</span>
+    {children}
+    <span className="req">*</span>
   </label>
 );
+
+/** Ô giờ HH:mm có biểu tượng đồng hồ (Figma). */
+function TimeInput({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: boolean }) {
+  return (
+    <div className="time-in">
+      <input className={`input${error ? " input-error" : ""}`} value={value} maxLength={5} placeholder="HH:mm" onChange={(e) => onChange(e.target.value)} />
+      <ClockIcon />
+    </div>
+  );
+}
 
 function CreateDialog({ types, emps, onClose, onDone }: { types: ShiftType[]; emps: Emp[]; onClose: () => void; onDone: (date: string) => void | Promise<void> }) {
   const [single, setSingle] = useState(true);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [shiftId, setShiftId] = useState<number>(0); // 0 = chưa chọn (bắt buộc chọn)
+  const [shiftId, setShiftId] = useState(""); // "" = chưa chọn (bắt buộc chọn)
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [picked, setPicked] = useState<string[]>([]);
-  const [error, setError] = useState("");
-  const [bad, setBad] = useState<string>("");
+  // Lỗi theo vùng: "date" (thời gian lập lịch), "shift" (ca làm / giờ), "employees"
+  const [err, setErr] = useState<{ where: "" | "date" | "shift" | "employees" | "other"; field?: string; msg: string }>({ where: "", msg: "" });
   const [busy, setBusy] = useState(false);
   const active = emps.filter((e) => e.trangThai === 1);
-  const chosen = types.find((x) => x.maCaLam === shiftId);
+  const chosen = types.find((x) => String(x.maCaLam) === shiftId);
   const customTime = !!chosen && HHMM.test(start) && HHMM.test(end) && (start !== chosen.gioBatDau || end !== chosen.gioKetThuc);
 
-  const pickShift = (id: number) => {
+  const pickShift = (id: string) => {
     setShiftId(id);
-    const t = types.find((x) => x.maCaLam === id);
+    const t = types.find((x) => String(x.maCaLam) === id);
     if (t) {
       setStart(t.gioBatDau);
       setEnd(t.gioKetThuc);
     }
-    if (bad === "shift") setBad("");
+    if (err.where === "shift") setErr({ where: "", msg: "" });
   };
 
-  const fail = (field: string, msg: string) => {
-    setBad(field);
-    setError(msg);
-  };
+  const fail = (where: "date" | "shift" | "employees" | "other", msg: string, field?: string) => setErr({ where, msg, field });
 
   const submit = async () => {
-    setError("");
-    setBad("");
+    setErr({ where: "", msg: "" });
     const f = from, t = single ? from : to;
     // Kiểm tra các trường bắt buộc theo thứ tự trên biểu mẫu
-    if (!f) return fail("from", MSG_NO_DATE);
-    if (!t) return fail("to", MSG_NO_DATE);
-    if (f > t) return fail("to", MSG_BAD_TIME);
-    if (!shiftId) return fail("shift", MSG_NO_SHIFT);
-    if (!validRange(start.trim(), end.trim())) return fail("time", MSG_BAD_TIME);
+    if (!f) return fail("date", MSG_NO_DATE, "from");
+    if (!t) return fail("date", MSG_NO_DATE, "to");
+    if (f > t) return fail("date", MSG_BAD_TIME, "to");
+    if (!shiftId) return fail("shift", MSG_NO_SHIFT, "shift");
+    if (!validRange(start.trim(), end.trim())) return fail("shift", MSG_BAD_TIME, "time");
     if (!picked.length) return fail("employees", MSG_NO_EMP);
     setBusy(true);
     try {
@@ -368,78 +379,103 @@ function CreateDialog({ types, emps, onClose, onDone }: { types: ShiftType[]; em
     } catch (e) {
       if (e instanceof ApiError) {
         const k = Object.keys(e.fields)[0] ?? "";
-        fail(k === "gioBatDau" ? "time" : k, e.message);
-      } else setError(SYS_ERR);
+        if (k === "from" || k === "to") fail("date", e.message, k);
+        else if (k === "gioBatDau") fail("shift", e.message, "time");
+        else if (k === "employees") fail("employees", e.message);
+        else fail("other", e.message);
+      } else fail("other", SYS_ERR);
     } finally {
       setBusy(false);
     }
   };
 
+  const msgAt = (where: string) => (err.where === where ? <div className="err">{err.msg}</div> : null);
+
   return (
     <Modal onClose={onClose}>
-      <div className="modal-head">
-        <h3>Lập lịch làm việc</h3>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="Đóng">✕</button>
-      </div>
-      <div className="form-row">
-        <Req>Thời gian lập lịch</Req>
-        <div className="radios">
-          <label><input type="radio" checked={single} onChange={() => setSingle(true)} /> Một ngày</label>
-          <label><input type="radio" checked={!single} onChange={() => setSingle(false)} /> Khoảng thời gian</label>
-        </div>
-      </div>
-      <div className="grid-2">
-        <div className="form-row">
-          <Req>Từ ngày</Req>
-          <DateInput value={from} onChange={setFrom} error={bad === "from"} />
+      <div className="shift-form">
+        <div className="modal-head">
+          <h3>Lập lịch làm việc</h3>
         </div>
         <div className="form-row">
-          <Req>Đến ngày</Req>
-          <DateInput value={single ? from : to} onChange={setTo} disabled={single} error={bad === "to"} />
-        </div>
-      </div>
-      <div className="grid-3">
-        <div className="form-row">
-          <Req>Ca làm</Req>
-          <select className={`input${bad === "shift" ? " input-error" : ""}`} value={shiftId} onChange={(e) => pickShift(Number(e.target.value))}>
-            <option value={0}>— Chọn ca —</option>
-            {types.map((t) => (
-              <option key={t.maCaLam} value={t.maCaLam}>{`${caCode(t.maCaLam)} · ${t.ten}`}</option>
-            ))}
-          </select>
-        </div>
-        <div className="form-row">
-          <Req>Giờ bắt đầu</Req>
-          <input className={`input${bad === "time" ? " input-error" : ""}`} value={start} maxLength={5} placeholder="HH:mm" onChange={(e) => setStart(e.target.value)} />
-        </div>
-        <div className="form-row">
-          <Req>Giờ kết thúc</Req>
-          <input className={`input${bad === "time" ? " input-error" : ""}`} value={end} maxLength={5} placeholder="HH:mm" onChange={(e) => setEnd(e.target.value)} />
-        </div>
-      </div>
-      {customTime && <div className="hint-row"><span>Khung giờ khác {caCode(shiftId)} — hệ thống sẽ tạo mã ca mới cho khung giờ này.</span></div>}
-      <div className="form-row">
-        <Req>Nhân viên phân công</Req>
-        <div className={`emp-list${bad === "employees" ? " input-error" : ""}`}>
-          {active.map((e) => (
-            <label key={e.maNhanVien} className="emp-opt">
-              <input
-                type="checkbox"
-                checked={picked.includes(e.maNhanVien)}
-                onChange={(ev) => {
-                  setPicked((p) => (ev.target.checked ? [...p, e.maNhanVien] : p.filter((x) => x !== e.maNhanVien)));
-                  if (bad === "employees") setBad("");
-                }}
-              />
-              <span className="emp-code">{e.maNhanVien}</span> {e.tenNhanVien}
+          <Req>Thời gian lập lịch</Req>
+          <div className="radios">
+            <label>
+              <input type="radio" checked={single} onChange={() => setSingle(true)} /> Một ngày
             </label>
-          ))}
+            <label>
+              <input type="radio" checked={!single} onChange={() => setSingle(false)} /> Khoảng thời gian
+            </label>
+          </div>
         </div>
-      </div>
-      {error && <div className="err banner">{error}</div>}
-      <div className="modal-actions">
-        <button type="button" className="btn btn-light" onClick={onClose}>Hủy</button>
-        <button type="button" className="btn btn-primary" disabled={busy} onClick={submit}>Xác nhận</button>
+        <div className="grid-2">
+          <div className="form-row">
+            <label>Từ ngày</label>
+            <DateInput value={from} onChange={setFrom} error={err.field === "from"} />
+          </div>
+          <div className="form-row">
+            <label>Đến ngày</label>
+            <DateInput value={single ? from : to} onChange={setTo} disabled={single} error={err.field === "to"} />
+          </div>
+        </div>
+        {msgAt("date")}
+        <div className="grid-3">
+          <div className="form-row">
+            <Req>Ca làm</Req>
+            <Dropdown
+              value={shiftId}
+              placeholder="Chọn ca làm"
+              error={err.field === "shift"}
+              options={types.map((t) => ({ value: String(t.maCaLam), label: `${caCode(t.maCaLam)} · ${t.ten}` }))}
+              onChange={pickShift}
+            />
+          </div>
+          <div className="form-row">
+            <Req>Giờ bắt đầu</Req>
+            <TimeInput value={start} onChange={setStart} error={err.field === "time"} />
+          </div>
+          <div className="form-row">
+            <Req>Giờ kết thúc</Req>
+            <TimeInput value={end} onChange={setEnd} error={err.field === "time"} />
+          </div>
+        </div>
+        {msgAt("shift")}
+        {customTime && !err.msg && (
+          <div className="hint-row">
+            <span>Khung giờ khác {caCode(Number(shiftId))} — hệ thống sẽ tạo mã ca mới cho khung giờ này.</span>
+          </div>
+        )}
+        <div className="form-row">
+          <Req>Nhân viên phân công</Req>
+          <div className={`emp-list${err.where === "employees" ? " input-error" : ""}`}>
+            {active.map((e) => {
+              const on = picked.includes(e.maNhanVien);
+              return (
+                <label key={e.maNhanVien} className={`emp-opt${on ? " on" : ""}`}>
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    onChange={(ev) => {
+                      setPicked((p) => (ev.target.checked ? [...p, e.maNhanVien] : p.filter((x) => x !== e.maNhanVien)));
+                      if (err.where === "employees") setErr({ where: "", msg: "" });
+                    }}
+                  />
+                  <span className="emp-code">{e.maNhanVien}</span> {e.tenNhanVien}
+                </label>
+              );
+            })}
+          </div>
+          {msgAt("employees")}
+        </div>
+        {msgAt("other")}
+        <div className="modal-actions">
+          <button type="button" className="btn btn-light" onClick={onClose}>
+            Hủy
+          </button>
+          <button type="button" className="btn btn-primary" disabled={busy} onClick={submit}>
+            Xác nhận
+          </button>
+        </div>
       </div>
     </Modal>
   );
@@ -451,7 +487,7 @@ function EditDialog({ target, emps, onClose, onDone }: { target: { maCaLam: numb
   const [end, setEnd] = useState("");
   const [removed, setRemoved] = useState<string[]>([]);
   const [added, setAdded] = useState<string[]>([]);
-  const [sel, setSel] = useState("");
+  const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -468,16 +504,16 @@ function EditDialog({ target, emps, onClose, onDone }: { target: { maCaLam: numb
       .catch((e) => setError(e instanceof ApiError ? e.message : SYS_ERR));
   }, [target]);
 
-  const activeNow = (rows ?? []).filter((a) => a.trangThai === 1 && !removed.includes(a.maNhanVien));
   const taken = new Set([...(rows ?? []).filter((a) => a.trangThai === 1).map((a) => a.maNhanVien), ...added]);
   const options = emps.filter((e) => e.trangThai === 1 && !taken.has(e.maNhanVien));
   const nameOf = (ma: string) => emps.find((e) => e.maNhanVien === ma)?.tenNhanVien ?? ma;
 
   const submit = async () => {
     setError("");
+    if (!validRange(start.trim(), end.trim())) return setError(MSG_BAD_TIME);
     setBusy(true);
     try {
-      await put(`/shifts/${target.maCaLam}/${target.ngay}`, { gioBatDau: start, gioKetThuc: end, remove: removed, add: added });
+      await put(`/shifts/${target.maCaLam}/${target.ngay}`, { gioBatDau: start.trim(), gioKetThuc: end.trim(), remove: removed, add: added });
       await onDone();
     } catch (e) {
       setError(e instanceof ApiError ? e.message : SYS_ERR);
@@ -486,77 +522,120 @@ function EditDialog({ target, emps, onClose, onDone }: { target: { maCaLam: numb
     }
   };
 
+  const first = rows?.[0];
+  const timeChanged = !!first && (start !== first.gioBatDau || end !== first.gioKetThuc);
+
   return (
-    <Modal onClose={onClose} wide>
-      <div className="modal-head">
-        <h3>Chi tiết ca làm</h3>
-        <button type="button" className="icon-btn" onClick={onClose} aria-label="Đóng">✕</button>
-      </div>
-      {!rows ? (
-        <div className="muted">{error || "Đang tải..."}</div>
-      ) : (
-        <>
-          <div className="grid-2">
-            <div className="form-row"><label>Mã ca làm</label><div className="plain">{caCode(target.maCaLam)}</div></div>
-            <div className="form-row"><label>Ngày làm</label><div className="plain">{formatDate(target.ngay)}</div></div>
-          </div>
-          <div className="grid-2">
-            <div className="form-row"><label>Giờ bắt đầu</label><input className="input" value={start} maxLength={5} onChange={(e) => setStart(e.target.value)} /></div>
-            <div className="form-row"><label>Giờ kết thúc</label><input className="input" value={end} maxLength={5} onChange={(e) => setEnd(e.target.value)} /></div>
-          </div>
-          {rows[0] && (start !== rows[0].gioBatDau || end !== rows[0].gioKetThuc) && (
-            <div className="hint-row">
-              <span>Đổi khung giờ: ca sẽ chuyển sang mã ca của khung giờ mới (tạo mã ca mới nếu chưa có).</span>
+    <Modal onClose={onClose}>
+      <div className="shift-form">
+        <div className="modal-head">
+          <h3>Chi tiết ca làm</h3>
+        </div>
+        {!rows ? (
+          <div className="muted">{error || "Đang tải..."}</div>
+        ) : (
+          <>
+            <div className="grid-2">
+              <div className="form-row">
+                <label>Mã ca làm</label>
+                <input className="input" readOnly value={first ? `${caCode(target.maCaLam)} · ${shiftName(first.gioBatDau)}` : caCode(target.maCaLam)} />
+              </div>
+              <div className="form-row">
+                <label>Ngày làm</label>
+                <input className="input" readOnly value={dayLong(target.ngay)} />
+              </div>
             </div>
-          )}
-          <div className="form-row">
-            <label>Nhân viên đã được phân công</label>
-            <ul className="asg-list">
-              {rows.map((a) => {
-                const gone = removed.includes(a.maNhanVien);
-                return (
-                  <li key={a.maNhanVien} className={gone || a.trangThai !== 1 ? "dim" : ""}>
-                    <span className="grow"><b>{a.maNhanVien}</b> {a.tenNhanVien}</span>
-                    <span className={`pill ${a.trangThai === 1 && !gone ? "pill-green" : a.trangThai === 2 ? "pill-amber" : "pill-red"}`}>
-                      {gone ? "Hủy" : STATUS[a.trangThai]}
-                    </span>
-                    {a.trangThai === 1 && (
-                      <button type="button" className="link danger" onClick={() => setRemoved((r) => (gone ? r.filter((x) => x !== a.maNhanVien) : [...r, a.maNhanVien]))}>
-                        {gone ? "Hoàn tác" : "Hủy"}
-                      </button>
-                    )}
-                  </li>
-                );
-              })}
-              {added.map((ma) => (
-                <li key={ma}>
-                  <span className="grow"><b>{ma}</b> {nameOf(ma)}</span>
-                  <span className="pill pill-green">Thêm mới</span>
-                  <button type="button" className="link danger" onClick={() => setAdded((x) => x.filter((m) => m !== ma))}>Bỏ</button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="form-row">
-            <label>Thêm nhân viên vào ca</label>
-            <div className="inline-add">
-              <select className="input" value={sel} onChange={(e) => setSel(e.target.value)}>
-                <option value="">— Chọn nhân viên —</option>
-                {options.map((o) => (
-                  <option key={o.maNhanVien} value={o.maNhanVien}>{`${o.maNhanVien} ${o.tenNhanVien}`}</option>
+            <div className="grid-2">
+              <div className="form-row">
+                <Req>Giờ bắt đầu</Req>
+                <TimeInput value={start} onChange={setStart} error={error === MSG_BAD_TIME} />
+              </div>
+              <div className="form-row">
+                <Req>Giờ kết thúc</Req>
+                <TimeInput value={end} onChange={setEnd} error={error === MSG_BAD_TIME} />
+              </div>
+            </div>
+            {error === MSG_BAD_TIME && <div className="err">{error}</div>}
+            {timeChanged && error !== MSG_BAD_TIME && (
+              <div className="hint-row">
+                <span>Đổi khung giờ: ca sẽ chuyển sang mã ca của khung giờ mới (tạo mã ca mới nếu chưa có).</span>
+              </div>
+            )}
+            <div className="form-row">
+              <label>Nhân viên đã được phân công</label>
+              <div className="asg-box">
+                {rows.map((a) => {
+                  const gone = removed.includes(a.maNhanVien);
+                  const st = gone ? (added.length ? 2 : 0) : a.trangThai;
+                  return (
+                    <div key={a.maNhanVien} className={`asg-row${gone || a.trangThai !== 1 ? " dim" : ""}`}>
+                      <span className="emp-code">{a.maNhanVien}</span>
+                      <span className="grow">{a.tenNhanVien}</span>
+                      <span className={`pill ${STATUS_PILL[st]}`}>{STATUS[st]}</span>
+                      {a.trangThai === 1 ? (
+                        <button
+                          type="button"
+                          className="btn btn-light btn-xs"
+                          onClick={() => setRemoved((r) => (gone ? r.filter((x) => x !== a.maNhanVien) : [...r, a.maNhanVien]))}
+                        >
+                          {gone ? "Hoàn tác" : "Hủy"}
+                        </button>
+                      ) : (
+                        <span className="btn-xs-space" />
+                      )}
+                    </div>
+                  );
+                })}
+                {added.map((ma) => (
+                  <div key={ma} className="asg-row">
+                    <span className="emp-code">{ma}</span>
+                    <span className="grow">{nameOf(ma)}</span>
+                    <span className="pill pill-green">Được phân công</span>
+                    <button type="button" className="btn btn-light btn-xs" onClick={() => setAdded((x) => x.filter((m) => m !== ma))}>
+                      Hủy
+                    </button>
+                  </div>
                 ))}
-              </select>
-              <button type="button" className="btn btn-light" disabled={!sel} onClick={() => { setAdded((x) => [...x, sel]); setSel(""); }}>Thêm</button>
+                {adding ? (
+                  <div className="asg-add">
+                    <Dropdown
+                      value=""
+                      placeholder="Chọn nhân viên"
+                      options={options.map((o) => ({
+                        value: o.maNhanVien,
+                        label: `${o.maNhanVien} ${o.tenNhanVien}`,
+                        node: (
+                          <>
+                            <span className="dd-code">{o.maNhanVien}</span>
+                            <span className="dd-name">{o.tenNhanVien}</span>
+                          </>
+                        ),
+                      }))}
+                      onChange={(v) => {
+                        setAdded((x) => [...x, v]);
+                        setAdding(false);
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <button type="button" className="asg-add-btn" disabled={!options.length} onClick={() => setAdding(true)}>
+                    + Thêm nhân viên
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-          {activeNow.length + added.length === 0 && <div className="muted small">Ca phải còn ít nhất một nhân viên.</div>}
-          {error && <div className="err banner">{error}</div>}
-          <div className="modal-actions">
-            <button type="button" className="btn btn-light" onClick={onClose}>Hủy</button>
-            <button type="button" className="btn btn-primary" disabled={busy} onClick={submit}>Xác nhận</button>
-          </div>
-        </>
-      )}
+            {error && error !== MSG_BAD_TIME && <div className="err">{error}</div>}
+            <div className="modal-actions">
+              <button type="button" className="btn btn-light" onClick={onClose}>
+                Hủy
+              </button>
+              <button type="button" className="btn btn-primary" disabled={busy} onClick={submit}>
+                Xác nhận
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </Modal>
   );
 }

@@ -44,6 +44,8 @@ export default function RevenueCompare() {
     try {
       setData(await get<Compare>("/revenue/compare", { from1: f1, to1: t1, from2: f2, to2: t2 }));
     } catch (err) {
+      // Không có đủ dữ liệu doanh thu để so sánh: không làm gì cả (giữ nguyên màn hình)
+      if (err instanceof ApiError && err.status === 404) return;
       setData(null);
       toast.error(err instanceof ApiError ? err.message : "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!");
     } finally {
@@ -58,24 +60,26 @@ export default function RevenueCompare() {
     <Page crumbs={["Quản lý doanh thu", "So sánh dữ liệu doanh thu"]} title="So sánh dữ liệu doanh thu">
       <section className="card">
         <div className="card-title">Thiết lập khoảng thời gian</div>
-        <div className="filters">
-          <div className="field-col">
-            <label>Kỳ 1 · Từ ngày</label>
-            <DateInput value={f1} onChange={setF1} error={errs.f1} />
+        <div className="compare-filters">
+          <div className="compare-dates">
+            <div className="field-col">
+              <label>Kỳ 1 · Từ ngày</label>
+              <DateInput variant="plain" value={f1} onChange={setF1} error={errs.f1} />
+            </div>
+            <div className="field-col">
+              <label>Đến ngày</label>
+              <DateInput variant="plain" value={t1} onChange={setT1} error={errs.t1} />
+            </div>
+            <div className="field-col gap-left">
+              <label>Kỳ 2 · Từ ngày</label>
+              <DateInput variant="plain" value={f2} onChange={setF2} error={errs.f2} />
+            </div>
+            <div className="field-col">
+              <label>Đến ngày</label>
+              <DateInput variant="plain" value={t2} onChange={setT2} error={errs.t2} />
+            </div>
           </div>
-          <div className="field-col">
-            <label>Đến ngày</label>
-            <DateInput value={t1} onChange={setT1} error={errs.t1} />
-          </div>
-          <div className="field-col">
-            <label>Kỳ 2 · Từ ngày</label>
-            <DateInput value={f2} onChange={setF2} error={errs.f2} />
-          </div>
-          <div className="field-col">
-            <label>Đến ngày</label>
-            <DateInput value={t2} onChange={setT2} error={errs.t2} />
-          </div>
-          <button type="button" className="btn btn-primary" disabled={loading} onClick={run}>
+          <button type="button" className="btn btn-primary compare-btn" disabled={loading} onClick={run}>
             So sánh
           </button>
         </div>

@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS mon (
   "GiaBan"    NUMERIC(18,2) NOT NULL CHECK ("GiaBan" >= 0),
   "TrangThai" SMALLINT NOT NULL DEFAULT 1 CHECK ("TrangThai" IN (0,1)) -- 1=Đang bán, 0=Ngừng bán
 );
+-- Món đã phát sinh đơn hàng vẫn được xóa: đánh dấu đã xóa (ẩn khỏi danh mục) để giữ nguyên lịch sử đơn hàng
+ALTER TABLE mon ADD COLUMN IF NOT EXISTS "DaXoa" SMALLINT NOT NULL DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS donhang (
   "MaDonHang"           CHAR(9) PRIMARY KEY,
