@@ -655,3 +655,5 @@ input, select, textarea, button, option, optgroup { font-family: "Arimo", Arial,
 .nav-subitem.active::before, .nav-subitem.active::after { border-color: #000; }
 /* Nội dung bị đẩy xuống để không bị thông báo trượt đè lên (chuyển động mượt) */
 [data-toast-push] { transition: margin-top 0.25s ease, top 0.25s ease; }
+/* Lập lịch làm việc: radio "Một ngày" / "Khoảng thời gian" — nút được chọn màu 3F2A20 */
+.radios input[type="radio"] { accent-color: #3f2a20; }
