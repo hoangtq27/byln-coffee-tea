@@ -116,7 +116,7 @@ export default function Shifts() {
             </button>
           ))}
         </div>
-        <DateInput variant="icon" value={date} onChange={(v) => v && setDate(v)} />
+        <DateInput variant="icon" value={date} label={dayLong(date)} onChange={(v) => v && setDate(v)} />
         <div className="spacer" />
         <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>
           + Lập lịch làm việc

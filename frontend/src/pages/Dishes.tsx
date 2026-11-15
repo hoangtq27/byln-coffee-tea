@@ -280,9 +280,9 @@ export default function Dishes() {
           stacked
           onClose={() => setToDelete(null)}
           buttons={[
-            { label: "Hủy", onClick: () => setToDelete(null) },
-            { label: "Chuyển trạng thái ngừng bán", disabled: busy || toDelete.trangThai === 0, onClick: discontinue },
-            { label: "Xác nhận", variant: "primary", disabled: busy, onClick: confirmDelete },
+            { label: "Hủy", variant: "cancel", onClick: () => setToDelete(null) },
+            { label: "Chuyển trạng thái ngừng bán", variant: "warn", disabled: busy || toDelete.trangThai === 0, onClick: discontinue },
+            { label: "Xác nhận", variant: "ok", disabled: busy, onClick: confirmDelete },
           ]}
         />
       )}
