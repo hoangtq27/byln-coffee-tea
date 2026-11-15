@@ -76,7 +76,10 @@ export default function RevenueReport() {
             <div className="date-tag">Ngày kết thúc</div>
             <DateInput variant="plain" className="date-val" value={to} range={[from, to]} onChange={setTo} />
           </div>
-          <button type="button" className="btn btn-primary report-go" disabled={loading} onClick={() => run(from, to, gran)}>
+        </div>
+        {/* Nút nằm giữa khoảng trống từ ô "Ngày kết thúc" tới mép phải khung, giữa chiều cao khung */}
+        <div className="report-go-cell">
+          <button type="button" className="btn btn-primary" disabled={loading} onClick={() => run(from, to, gran)}>
             Xem báo cáo
           </button>
         </div>
