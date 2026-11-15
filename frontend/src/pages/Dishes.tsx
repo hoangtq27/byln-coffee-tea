@@ -246,11 +246,11 @@ export default function Dishes() {
                 <tr className="row-edit">
                   <td className="strong">{nextCode}</td>
                   <td>
-                    <input className={`input${errs.tenMon ? " input-error" : ""}`} placeholder="Tên món" value={draft.tenMon} maxLength={200} onChange={(e) => setDraft({ ...draft, tenMon: e.target.value })} />
+                    <input className={`input${errs.tenMon ? " input-error" : ""}`} placeholder="Nhập tên món" value={draft.tenMon} maxLength={200} onChange={(e) => setDraft({ ...draft, tenMon: e.target.value })} />
                     {errs.tenMon && <div className="err">{errs.tenMon}</div>}
                   </td>
                   <td className="num">
-                    <input className={`input num-in${errs.giaBan ? " input-error" : ""}`} placeholder="Giá bán" inputMode="decimal" value={draft.giaBan} onChange={(e) => setDraft({ ...draft, giaBan: e.target.value })} />
+                    <input className={`input num-in${errs.giaBan ? " input-error" : ""}`} placeholder="Nhập giá bán" inputMode="decimal" value={draft.giaBan} onChange={(e) => setDraft({ ...draft, giaBan: e.target.value })} />
                     {errs.giaBan && <div className="err">{errs.giaBan}</div>}
                   </td>
                   <td>
