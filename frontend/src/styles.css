@@ -638,8 +638,8 @@ input, select, textarea, button, option, optgroup { font-family: "Arimo", Arial,
 .date-val .date-plain-btn { padding: 0; text-align: center; width: 100%; }
 /* Ô ngày không icon (Tạo nhân viên) */
 .date-input:not(:has(.date-btn)) .input { padding-right: calc(16 * var(--u)); }
-/* Thông báo trượt: ô chữ nền 4E3529, chữ E7E1DC */
-.toast { background: #4e3529; color: #e7e1dc; }
+/* Thông báo trượt: ô chữ nền E7E1DC, chữ 2E2621 */
+.toast { background: #e7e1dc; color: #2e2621; }
 /* Nhánh cây kiểu bo cong (theo hình mẫu): đường dọc liền, nhánh trên tách ra bằng đường cong, mục cuối bo góc rẽ phải */
 .nav-subitem::before {
   left: calc(40 * var(--u)); top: calc(-6 * var(--u)); bottom: calc(-2 * var(--u)); height: auto;
