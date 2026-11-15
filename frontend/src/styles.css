@@ -657,3 +657,8 @@ input, select, textarea, button, option, optgroup { font-family: "Arimo", Arial,
 [data-toast-push] { transition: margin-top 0.25s ease, top 0.25s ease; }
 /* Lập lịch làm việc: radio "Một ngày" / "Khoảng thời gian" — nút được chọn màu 3F2A20 */
 .radios input[type="radio"] { accent-color: #3f2a20; }
+/* Báo cáo doanh thu: nút "Xem báo cáo" nằm chính giữa chiều cao khung "Khoảng thời gian", sát phải */
+@media (min-width: 1100px) {
+  .report-card { position: relative; }
+  .report-filters .btn.report-go { position: absolute; top: 50%; right: calc(17 * var(--u)); transform: translateY(-50%); margin: 0; }
+}

@@ -57,7 +57,7 @@ export default function RevenueReport() {
 
   return (
     <Page crumbs={["Quản lý doanh thu", "Báo cáo doanh thu"]} title="Báo cáo doanh thu">
-      <section className="card">
+      <section className="card report-card">
         <div className="card-title">Khoảng thời gian</div>
         <div className="filters report-filters">
           <div className="seg seg-split">
@@ -76,7 +76,7 @@ export default function RevenueReport() {
             <div className="date-tag">Ngày kết thúc</div>
             <DateInput variant="plain" className="date-val" value={to} range={[from, to]} onChange={setTo} />
           </div>
-          <button type="button" className="btn btn-primary" disabled={loading} onClick={() => run(from, to, gran)}>
+          <button type="button" className="btn btn-primary report-go" disabled={loading} onClick={() => run(from, to, gran)}>
             Xem báo cáo
           </button>
         </div>
