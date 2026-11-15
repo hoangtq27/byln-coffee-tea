@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDate, parseDisplayDate, toIso, todayIso } from "../lib/format";
 
-const DOW = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+const DOW = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 function Chevron({ up }: { up?: boolean }) {
   return (
@@ -13,9 +13,10 @@ function Chevron({ up }: { up?: boolean }) {
 
 /**
  * Khung chọn lịch (Figma "Khung chọn thời gian"): mũi tên tháng trước/sau,
- * nút "Tháng n" và "năm" bấm để chọn nhanh, lưới ngày từ Thứ Hai (T2) đến Chủ nhật (CN).
+ * nút tháng (chỉ hiện số) và năm bấm để chọn nhanh, lưới ngày Mo → Su.
+ * Ngày của tháng trước/sau vẫn hiện (màu 9A9693, không nền). `range`: tô khoảng ngày bắt đầu → kết thúc.
  */
-export function Calendar({ value, onPick }: { value: string; onPick: (iso: string) => void }) {
+export function Calendar({ value, onPick, range }: { value: string; onPick: (iso: string) => void; range?: [string, string] }) {
   const base = value || todayIso();
   const [y, setY] = useState(Number(base.slice(0, 4)));
   const [m, setM] = useState(Number(base.slice(5, 7)));
@@ -31,8 +32,15 @@ export function Calendar({ value, onPick }: { value: string; onPick: (iso: strin
   };
   const first = (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7;
   const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
-  const cells: (number | null)[] = [...Array(first).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)];
-  while (cells.length % 7) cells.push(null);
+  const prevDays = new Date(Date.UTC(y, m - 1, 0)).getUTCDate();
+  const py = m === 1 ? y - 1 : y, pm = m === 1 ? 12 : m - 1;
+  const ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1;
+  const cells: { iso: string; d: number; other: boolean }[] = [
+    ...Array.from({ length: first }, (_, i) => ({ iso: toIso(py, pm, prevDays - first + 1 + i), d: prevDays - first + 1 + i, other: true })),
+    ...Array.from({ length: days }, (_, i) => ({ iso: toIso(y, m, i + 1), d: i + 1, other: false })),
+  ];
+  for (let d = 1; cells.length % 7; d++) cells.push({ iso: toIso(ny, nm, d), d, other: true });
+  const [rs, re] = range && range[0] && range[1] ? (range[0] <= range[1] ? range : [range[1], range[0]]) : range?.[0] ? [range[0], range[0]] : range?.[1] ? [range[1], range[1]] : ["", ""];
   const today = todayIso();
 
   return (
@@ -42,7 +50,7 @@ export function Calendar({ value, onPick }: { value: string; onPick: (iso: strin
           ‹
         </button>
         <button type="button" className={`cal-pick${mode === "month" ? " on" : ""}`} onClick={() => setMode(mode === "month" ? "day" : "month")}>
-          Tháng {m} <Chevron up={mode === "month"} />
+          {m} <Chevron up={mode === "month"} />
         </button>
         <button
           type="button"
@@ -71,7 +79,7 @@ export function Calendar({ value, onPick }: { value: string; onPick: (iso: strin
                 setMode("day");
               }}
             >
-              Tháng {i + 1}
+              {i + 1}
             </button>
           ))}
         </div>
@@ -102,14 +110,14 @@ export function Calendar({ value, onPick }: { value: string; onPick: (iso: strin
               {d}
             </div>
           ))}
-          {cells.map((d, i) => {
-            if (d === null) return <div key={i} />;
-            const iso = toIso(y, m, d);
+          {cells.map(({ iso, d, other }) => {
+            const edge = range ? !other && (iso === rs || iso === re) : iso === value;
+            const inside = range && !other && rs && iso > rs && iso < re;
             return (
               <button
                 type="button"
-                key={i}
-                className={`cal-day${iso === value ? " sel" : ""}${iso === today ? " today" : ""}`}
+                key={iso}
+                className={`cal-day${other ? " other" : ""}${edge ? " sel" : ""}${inside ? " in-range" : ""}${iso === today && !other ? " today" : ""}`}
                 onClick={() => onPick(iso)}
               >
                 {d}
@@ -147,10 +155,14 @@ interface Props {
   className?: string;
   /** variant "icon": chữ hiển thị sát bên phải icon (vd "Thứ Hai, 09/11/2026") */
   label?: string;
+  /** Ẩn icon lịch ở variant "default" (bấm vào ô vẫn mở khung chọn lịch) */
+  noIcon?: boolean;
+  /** Khoảng ngày [bắt đầu, kết thúc] để tô trên khung lịch */
+  range?: [string, string];
 }
 
 /** Ô ngày: gõ trực tiếp hoặc chọn từ khung lịch. */
-export function DateInput({ value, onChange, placeholder = "dd/mm/yyyy", error, disabled, id, variant = "default", className, label }: Props) {
+export function DateInput({ value, onChange, placeholder = "dd/mm/yyyy", error, disabled, id, variant = "default", className, label, noIcon, range }: Props) {
   const [text, setText] = useState(formatDate(value));
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -179,6 +191,7 @@ export function DateInput({ value, onChange, placeholder = "dd/mm/yyyy", error, 
     <div className="cal-pop">
       <Calendar
         value={value}
+        range={range}
         onPick={(iso) => {
           onChange(iso);
           setOpen(false);
@@ -232,9 +245,9 @@ export function DateInput({ value, onChange, placeholder = "dd/mm/yyyy", error, 
         onKeyDown={(e) => e.key === "Enter" && commit((e.target as HTMLInputElement).value)}
         onFocus={() => !disabled && setOpen(true)}
       />
-      <button type="button" className="date-btn" tabIndex={-1} disabled={disabled} onClick={() => setOpen((o) => !o)} aria-label="Chọn ngày">
+      {!noIcon && <button type="button" className="date-btn" tabIndex={-1} disabled={disabled} onClick={() => setOpen((o) => !o)} aria-label="Chọn ngày">
         <CalendarIcon />
-      </button>
+      </button>}
       {pop}
     </div>
   );

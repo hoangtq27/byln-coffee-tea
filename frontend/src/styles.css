@@ -615,3 +615,28 @@ input, select, textarea, button, option, optgroup { font-family: "Arimo", Arial,
 .confirm.stacked.acc-del .confirm-actions .btn:nth-child(1) { min-width: calc(150 * var(--u)); }
 .confirm.stacked.acc-del .confirm-actions .btn:nth-child(2) { min-width: calc(259 * var(--u)); }
 .confirm.stacked.acc-del .confirm-actions .btn:nth-child(3) { min-width: calc(84 * var(--u)); }
+
+/* ===== PROMPT 6 ===== */
+/* Thanh bên: "nhánh cây" nối mục cha với các mục con (Figma "keyline-icons:folder-tree-fill", x 32→134) */
+.nav-sub { position: relative; }
+.nav-subitem { position: relative; }
+.nav-subitem::before {
+  content: ""; position: absolute; left: calc(40 * var(--u)); top: calc(-6 * var(--u)); height: calc(30 * var(--u));
+  border-left: calc(2 * var(--u)) solid var(--muted); min-width: 0;
+}
+.nav-subitem:not(:last-child)::before { height: auto; bottom: calc(-2 * var(--u)); }
+.nav-subitem::after {
+  content: ""; position: absolute; left: calc(40 * var(--u)); top: calc(23 * var(--u)); width: calc(40 * var(--u));
+  border-top: calc(2 * var(--u)) solid var(--muted);
+}
+.nav-subitem.active::before, .nav-subitem.active::after { border-color: var(--brown); }
+/* Khung chọn lịch: ngày tháng khác màu 9A9693 không nền; khoảng ngày: 2 mốc chữ trắng nền 402B21, giữa chữ 2E2621 nền F5EDE0 */
+.cal-day.other, .cal-day.other:hover { color: #9a9693; background: none; }
+.cal-day.in-range { background: #f5ede0; color: #2e2621; }
+.cal-day.sel { background: #402b21; color: #fff; }
+/* Báo cáo doanh thu: ngày dưới nhãn căn giữa ô */
+.date-val .date-plain-btn { padding: 0; text-align: center; width: 100%; }
+/* Ô ngày không icon (Tạo nhân viên) */
+.date-input:not(:has(.date-btn)) .input { padding-right: calc(16 * var(--u)); }
+/* Thông báo trượt: ô chữ nền 4E3529, chữ E7E1DC */
+.toast { background: #4e3529; color: #e7e1dc; }

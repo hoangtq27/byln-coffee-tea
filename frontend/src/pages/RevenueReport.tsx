@@ -70,11 +70,11 @@ export default function RevenueReport() {
           {/* Figma: ô nhãn (nền F5EDE0) phía trên, ô giá trị ngày phía dưới — bấm để mở khung chọn lịch */}
           <div className="date-stack">
             <div className="date-tag">Ngày bắt đầu</div>
-            <DateInput variant="plain" className="date-val" value={from} onChange={setFrom} />
+            <DateInput variant="plain" className="date-val" value={from} range={[from, to]} onChange={setFrom} />
           </div>
           <div className="date-stack">
             <div className="date-tag">Ngày kết thúc</div>
-            <DateInput variant="plain" className="date-val" value={to} onChange={setTo} />
+            <DateInput variant="plain" className="date-val" value={to} range={[from, to]} onChange={setTo} />
           </div>
           <button type="button" className="btn btn-primary" disabled={loading} onClick={() => run(from, to, gran)}>
             Xem báo cáo
