@@ -411,11 +411,11 @@ function CreateDialog({ types, emps, onClose, onDone }: { types: ShiftType[]; em
         <div className="grid-2">
           <div className="form-row">
             <label>Từ ngày</label>
-            <DateInput value={from} onChange={setFrom} error={err.field === "from" || err.field === "dates"} />
+            <DateInput value={from} placeholder="" onChange={setFrom} error={err.field === "from" || err.field === "dates"} />
           </div>
           <div className="form-row">
             <label>Đến ngày</label>
-            <DateInput value={single ? from : to} onChange={setTo} disabled={single} error={err.field === "to" || err.field === "dates"} />
+            <DateInput value={single ? from : to} placeholder="" onChange={setTo} disabled={single} error={err.field === "to" || err.field === "dates"} />
           </div>
         </div>
         {msgAt("date")}
