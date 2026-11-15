@@ -666,3 +666,17 @@ input, select, textarea, button, option, optgroup { font-family: "Arimo", Arial,
   .report-card > .report-filters { grid-column: 1; grid-row: 2; }
   .report-go-cell { grid-column: 2; grid-row: 1 / 3; justify-content: center; align-items: center; margin: 0; transform: translateY(calc(-3.5 * var(--u))); }
 }
+/* Báo cáo doanh thu — bố cục theo hình mẫu (đơn vị thiết kế 1920):
+   khung cao ~148; tiêu đề & hàng nút thẳng mép trái (cách 24); 2 ô ngày thẳng đáy với hàng nút, phần trên nhô lên ngang tiêu đề */
+@media (min-width: 1100px) {
+  .report-card { padding: calc(20 * var(--u)) calc(24 * var(--u)) calc(23 * var(--u)); }
+  .report-card > .card-title { margin: 0 0 calc(27 * var(--u)); font-size: calc(22 * var(--u)); line-height: calc(28 * var(--u)); }
+  .report-card > .report-filters { height: calc(50 * var(--u)); align-items: flex-end; flex-wrap: nowrap; gap: calc(35 * var(--u)); }
+  .report-card .report-filters .seg { gap: calc(25 * var(--u)); margin-right: calc(23 * var(--u)); }
+  .report-card .report-filters .seg-btn { width: calc(112 * var(--u)); height: calc(50 * var(--u)); }
+  .report-card .date-stack { width: calc(219 * var(--u)); flex-shrink: 0; }
+  .report-card .date-tag { height: calc(45 * var(--u)); }
+  .report-card .date-val .date-plain-btn { height: calc(49 * var(--u)); }
+  .report-go-cell { transform: translateY(calc(1.5 * var(--u))); }
+  .report-go-cell .btn { width: calc(200 * var(--u)); min-width: 0; height: calc(55 * var(--u)); padding: 0; }
+}
