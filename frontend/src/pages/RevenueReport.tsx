@@ -59,21 +59,22 @@ export default function RevenueReport() {
     <Page crumbs={["Quản lý doanh thu", "Báo cáo doanh thu"]} title="Báo cáo doanh thu">
       <section className="card">
         <div className="card-title">Khoảng thời gian</div>
-        <div className="filters">
-          <div className="seg">
+        <div className="filters report-filters">
+          <div className="seg seg-split">
             {GRANS.map((g) => (
               <button key={g.v} type="button" className={`seg-btn${gran === g.v ? " on" : ""}`} onClick={() => setGran(g.v)}>
                 {g.label}
               </button>
             ))}
           </div>
-          <div className="field-col">
-            <label>Ngày bắt đầu</label>
-            <DateInput value={from} onChange={setFrom} />
+          {/* Figma: ô nhãn (nền F5EDE0) phía trên, ô giá trị ngày phía dưới — bấm để mở khung chọn lịch */}
+          <div className="date-stack">
+            <div className="date-tag">Ngày bắt đầu</div>
+            <DateInput variant="plain" className="date-val" value={from} onChange={setFrom} />
           </div>
-          <div className="field-col">
-            <label>Ngày kết thúc</label>
-            <DateInput value={to} onChange={setTo} />
+          <div className="date-stack">
+            <div className="date-tag">Ngày kết thúc</div>
+            <DateInput variant="plain" className="date-val" value={to} onChange={setTo} />
           </div>
           <button type="button" className="btn btn-primary" disabled={loading} onClick={() => run(from, to, gran)}>
             Xem báo cáo

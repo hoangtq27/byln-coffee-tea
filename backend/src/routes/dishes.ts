@@ -32,7 +32,7 @@ const body = z.object({
 dishesRouter.get(
   "/",
   asyncHandler(async (req, res) => {
-    const { rows } = await getDb().query<DishRow>(`SELECT * FROM mon ORDER BY "MaMon"`);
+    const { rows } = await getDb().query<DishRow>(`SELECT * FROM mon WHERE "DaXoa"=0 ORDER BY "MaMon"`);
     let list = rows.map(map);
     const q = typeof req.query.q === "string" ? normalizeText(req.query.q) : "";
     if (q) list = list.filter((d) => normalizeText(d.tenMon).includes(q));
@@ -79,7 +79,7 @@ dishesRouter.put(
   asyncHandler(async (req, res) => {
     const b = parse(body, req.body ?? {});
     const { rows } = await getDb().query<DishRow>(
-      `UPDATE mon SET "TenMon"=$2,"GiaBan"=$3,"TrangThai"=$4 WHERE "MaMon"=$1 RETURNING *`,
+      `UPDATE mon SET "TenMon"=$2,"GiaBan"=$3,"TrangThai"=$4 WHERE "MaMon"=$1 AND "DaXoa"=0 RETURNING *`,
       [req.params.ma, b.tenMon, b.giaBan, b.trangThai],
     );
     if (!rows[0]) throw new HttpError(404, "Không tìm thấy món!");
@@ -91,7 +91,7 @@ dishesRouter.post(
   "/:ma/discontinue",
   requireRole("manager"),
   asyncHandler(async (req, res) => {
-    const { rows } = await getDb().query<DishRow>(`UPDATE mon SET "TrangThai"=0 WHERE "MaMon"=$1 RETURNING *`, [
+    const { rows } = await getDb().query<DishRow>(`UPDATE mon SET "TrangThai"=0 WHERE "MaMon"=$1 AND "DaXoa"=0 RETURNING *`, [
       req.params.ma,
     ]);
     if (!rows[0]) throw new HttpError(404, "Không tìm thấy món!");
@@ -104,11 +104,16 @@ dishesRouter.delete(
   requireRole("manager"),
   asyncHandler(async (req, res) => {
     const db = getDb();
-    const used = await db.query(`SELECT 1 FROM chitiet_donhang WHERE "MaMon"=$1 LIMIT 1`, [req.params.ma]);
-    if (used.rows.length)
-      throw new HttpError(409, "Món đã phát sinh trong đơn hàng nên không thể xóa. Hãy chuyển trạng thái ngừng bán!");
-    const { rows } = await db.query(`DELETE FROM mon WHERE "MaMon"=$1 RETURNING "MaMon"`, [req.params.ma]);
-    if (!rows[0]) throw new HttpError(404, "Không tìm thấy món!");
+    const ma = req.params.ma;
+    const ex = await db.query(`SELECT 1 FROM mon WHERE "MaMon"=$1 AND "DaXoa"=0`, [ma]);
+    if (!ex.rows.length) throw new HttpError(404, "Không tìm thấy món!");
+    const used = await db.query(`SELECT 1 FROM chitiet_donhang WHERE "MaMon"=$1 LIMIT 1`, [ma]);
+    if (used.rows.length) {
+      // Món đã phát sinh đơn hàng: xóa khỏi danh mục nhưng giữ dữ liệu để lịch sử đơn hàng/doanh thu không bị mất
+      await db.query(`UPDATE mon SET "DaXoa"=1, "TrangThai"=0 WHERE "MaMon"=$1`, [ma]);
+    } else {
+      await db.query(`DELETE FROM mon WHERE "MaMon"=$1`, [ma]);
+    }
     res.json({ message: "Xóa món thành công!" });
   }),
 );

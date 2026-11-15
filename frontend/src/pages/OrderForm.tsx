@@ -5,13 +5,22 @@ import { Modal } from "../components/Modal";
 import { useToast } from "../components/Toast";
 import { ApiError, get, post, put } from "../lib/api";
 import { useAuth } from "../lib/auth";
-import { formatDateTime, formatVnd, NGUON, TRANG_THAI_DON, type Dish, type OrderItem, type OrderSummary } from "../lib/format";
+import { formatVnd, NGUON, PHUONG_THUC, TRANG_THAI_DON, type Dish, type OrderItem, type OrderSummary } from "../lib/format";
 
 interface Line {
   maMon: string;
   tenMon: string;
   donGia: number;
   soLuong: string; // giữ chuỗi để hiện đúng giá trị người dùng nhập (rỗng / -1 / 1.5 ...)
+}
+
+/** Biểu tượng thùng rác (vẽ bằng SVG nội tuyến, không dùng file ảnh) */
+function TrashIcon() {
+  return (
+    <svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 7h16M10 11v6M14 11v6M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12M9 7V4h6v3" />
+    </svg>
+  );
 }
 
 const QTY_REQUIRED = "Vui lòng nhập số lượng!";
@@ -71,6 +80,7 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
   const [checked, setChecked] = useState<string[]>([]); // món được chọn để xóa (màn Sửa)
   const [pickerOpen, setPickerOpen] = useState(false); // hộp thoại Thêm món
   const [picked, setPicked] = useState<string[]>([]);
+  const [pickQty, setPickQty] = useState<Record<string, string>>({}); // số lượng nhập trong hộp Thêm món
 
   // Nhân viên không được sửa đơn đã thanh toán, chỉ được chuyển trạng thái đơn sang "Hoàn thành"
   const lockedForStaff = mode === "edit" && user?.role === "staff" && meta?.thanhToan === 1;
@@ -372,7 +382,7 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
           <div className="oe-head">
             <h2>Đơn hàng {code}</h2>
             <span className="muted">
-              Nguồn: {NGUON[meta.nguon]} · Nhân viên: {meta.maNhanVien} · {formatDateTime(meta.thoiGianTao)}
+              Nguồn: {NGUON[meta.nguon]} · Nhân viên: {meta.maNhanVien} · Thanh toán: {PHUONG_THUC[meta.phuongThuc]}
             </span>
           </div>
           <div className="oe-tools">
@@ -382,6 +392,7 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
               disabled={lockedForStaff}
               onClick={() => {
                 setPicked([]);
+                setPickQty({});
                 setPickerOpen(true);
               }}
             >
@@ -390,13 +401,13 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
             {checked.length > 0 && (
               <button
                 type="button"
-                className="btn btn-light danger-text"
+                className="btn btn-light btn-del"
                 onClick={() => {
                   setLines((ls) => ls.filter((l) => !checked.includes(l.maMon)));
                   setChecked([]);
                 }}
               >
-                <span aria-hidden="true">✕</span> Xóa món
+                <TrashIcon /> Xóa món
               </button>
             )}
           </div>
@@ -427,11 +438,6 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
             <div className="oe-total">
               <span>Tổng tiền</span>
               <b>{formatVnd(total)}</b>
-              {discountNum > 0 && discountValid && (
-                <span className="muted small">
-                  Giảm {formatVnd(discountNum)} · Thanh toán {formatVnd(payable)}
-                </span>
-              )}
             </div>
           </div>
           <div className="form-actions">
@@ -457,6 +463,7 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
                     <th>Mã món</th>
                     <th>Tên món</th>
                     <th className="num">Giá bán</th>
+                    <th>Số lượng</th>
                     <th>Trạng thái</th>
                   </tr>
                 </thead>
@@ -480,6 +487,22 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
                         <td>{d.tenMon}</td>
                         <td className="num">{formatVnd(d.giaBan)}</td>
                         <td>
+                          <input
+                            className="input qty-sm"
+                            placeholder="SL"
+                            inputMode="numeric"
+                            disabled={off || inOrder}
+                            value={pickQty[d.maMon] ?? ""}
+                            aria-label={`Số lượng ${d.tenMon}`}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              setPickQty((q) => ({ ...q, [d.maMon]: v }));
+                              // nhập số lượng thì tự chọn món
+                              if (v.trim()) setPicked((p) => (p.includes(d.maMon) ? p : [...p, d.maMon]));
+                            }}
+                          />
+                        </td>
+                        <td>
                           <span className={`pill ${off ? "pill-red" : "pill-green"}`}>{off ? "Ngừng bán" : "Đang bán"}</span>
                         </td>
                       </tr>
@@ -498,7 +521,7 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
                 disabled={!picked.length}
                 onClick={() => {
                   const add = dishes.filter((d) => picked.includes(d.maMon));
-                  setLines((ls) => [...ls, ...add.map((d) => ({ maMon: d.maMon, tenMon: d.tenMon, donGia: d.giaBan, soLuong: "" }))]);
+                  setLines((ls) => [...ls, ...add.map((d) => ({ maMon: d.maMon, tenMon: d.tenMon, donGia: d.giaBan, soLuong: (pickQty[d.maMon] ?? "").trim() }))]);
                   setErrs((e) => ({ ...e, items: "" }));
                   setPickerOpen(false);
                 }}

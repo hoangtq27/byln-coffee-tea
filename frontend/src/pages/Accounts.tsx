@@ -86,7 +86,7 @@ export default function Accounts() {
 
   return (
     <Page
-      crumbs={["Quản lý tài khoản"]}
+      crumbs={editing === undefined ? ["Quản lý tài khoản"] : ["Quản lý tài khoản", editing ? "Sửa thông tin tài khoản" : "Tạo tài khoản"]}
       title="Quản lý tài khoản"
       actions={
         <button type="button" className="btn btn-primary" onClick={() => setEditing(null)}>
@@ -123,7 +123,7 @@ export default function Accounts() {
                   <td className="actions">
                     <button type="button" className="link" onClick={() => setEditing(a)}>Sửa</button>
                     <span className="sep">·</span>
-                    <button type="button" className="link danger" onClick={() => setToDelete(a)}>Xóa</button>
+                    <button type="button" className="link link-black" onClick={() => setToDelete(a)}>Xóa</button>
                   </td>
                 </tr>
               ))}
