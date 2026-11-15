@@ -145,10 +145,10 @@ export default function Employees() {
         {errs.sdt?.trim() && <div className="err">{errs.sdt}</div>}
       </td>
       <td>
-        <input className="input" placeholder="Địa chỉ" maxLength={200} value={d.diaChi} onChange={(e) => setDraft({ ...d, diaChi: e.target.value })} />
+        <input className="input" placeholder="Nhập địa chỉ" maxLength={200} value={d.diaChi} onChange={(e) => setDraft({ ...d, diaChi: e.target.value })} />
       </td>
       <td>
-        <DateInput value={d.ngayVaoLam} onChange={(v) => setDraft({ ...d, ngayVaoLam: v })} />
+        <DateInput noIcon value={d.ngayVaoLam} onChange={(v) => setDraft({ ...d, ngayVaoLam: v })} />
       </td>
       <td>
         <select className="input" value={d.trangThai} onChange={(e) => setDraft({ ...d, trangThai: Number(e.target.value) })}>
