@@ -115,7 +115,7 @@ export default function Accounts() {
                   <td className="strong">{a.maTaiKhoan}</td>
                   <td>{a.tenDangNhap}</td>
                   <td>••••••••</td>
-                  <td>{a.maNhanVien ?? <span className="muted">—</span>}</td>
+                  <td>{a.maNhanVien ?? ""}</td>
                   <td>{a.vaiTro === "manager" ? "Quản lý" : "Nhân viên"}</td>
                   <td>
                     <span className={`pill ${a.trangThai ? "pill-green" : "pill-red"}`}>{a.trangThai ? "Hoạt động" : "Khóa"}</span>
@@ -151,12 +151,13 @@ export default function Accounts() {
       {toDelete && (
         <ConfirmDialog
           title="Bạn có chắc chắn muốn xóa tài khoản này không?"
-          detail={`${toDelete.tenDangNhap} (${toDelete.maTaiKhoan})`}
+          stacked
+          className="acc-del"
           onClose={() => setToDelete(null)}
           buttons={[
-            { label: "Hủy", onClick: () => setToDelete(null) },
-            { label: "Khóa tài khoản này", disabled: busy || toDelete.trangThai === 0, onClick: lock },
-            { label: "Xác nhận", variant: "danger", disabled: busy, onClick: remove },
+            { label: "Xác nhận", variant: "ok", disabled: busy, onClick: remove },
+            { label: "Khóa tài khoản này", variant: "warn", disabled: busy || toDelete.trangThai === 0, onClick: lock },
+            { label: "Hủy", variant: "cancel", onClick: () => setToDelete(null) },
           ]}
         />
       )}

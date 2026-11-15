@@ -20,7 +20,8 @@ export function Modal({ children, onClose, wide }: { children: ReactNode; onClos
 
 export interface ConfirmButton {
   label: string;
-  variant?: "default" | "danger" | "primary";
+  /** cancel/warn/ok: màu nút hộp xác nhận xóa theo Figma (đỏ AD4A40 / cam AD7A38 / xanh 4F7559) */
+  variant?: "default" | "danger" | "primary" | "cancel" | "warn" | "ok";
   onClick: () => void;
   disabled?: boolean;
 }
@@ -32,7 +33,9 @@ export function ConfirmDialog({
   buttons,
   onClose,
   stacked,
+  className,
 }: {
+  className?: string;
   title: string;
   detail?: string;
   /** Bố cục dọc (Figma "Xóa món"): biểu tượng trên, câu hỏi dưới, hàng nút bên dưới */
@@ -42,7 +45,7 @@ export function ConfirmDialog({
 }) {
   return (
     <Modal onClose={onClose}>
-      <div className={`confirm${stacked ? " stacked" : ""}`}>
+      <div className={`confirm${stacked ? " stacked" : ""}${className ? ` ${className}` : ""}`}>
         <div className="confirm-icon">?</div>
         <h3>{title}</h3>
         {detail && <p className="confirm-detail">{detail}</p>}
@@ -52,7 +55,7 @@ export function ConfirmDialog({
               key={b.label}
               type="button"
               disabled={b.disabled}
-              className={`btn ${b.variant === "danger" ? "btn-danger" : b.variant === "primary" ? "btn-primary" : "btn-light"}`}
+              className={`btn ${b.variant === "danger" ? "btn-danger" : b.variant === "primary" ? "btn-primary" : b.variant === "cancel" || b.variant === "warn" || b.variant === "ok" ? `btn-c-${b.variant}` : "btn-light"}`}
               onClick={b.onClick}
             >
               {b.label}

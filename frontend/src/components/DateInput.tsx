@@ -145,10 +145,12 @@ interface Props {
    */
   variant?: "default" | "plain" | "icon";
   className?: string;
+  /** variant "icon": chữ hiển thị sát bên phải icon (vd "Thứ Hai, 09/11/2026") */
+  label?: string;
 }
 
 /** Ô ngày: gõ trực tiếp hoặc chọn từ khung lịch. */
-export function DateInput({ value, onChange, placeholder = "dd/mm/yyyy", error, disabled, id, variant = "default", className }: Props) {
+export function DateInput({ value, onChange, placeholder = "dd/mm/yyyy", error, disabled, id, variant = "default", className, label }: Props) {
   const [text, setText] = useState(formatDate(value));
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -190,6 +192,7 @@ export function DateInput({ value, onChange, placeholder = "dd/mm/yyyy", error, 
       <div className={`date-input date-icon ${className ?? ""}`} ref={box}>
         <button type="button" className="date-icon-btn" disabled={disabled} onClick={() => setOpen((o) => !o)} aria-label="Chọn ngày">
           <CalendarIcon />
+          {label && <span className="date-icon-label">{label}</span>}
         </button>
         {pop}
       </div>

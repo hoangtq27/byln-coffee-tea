@@ -286,7 +286,7 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
                   {err && <div className="err">{err}</div>}
                 </td>
                 <td className="num">{formatVnd(l.donGia)}</td>
-                <td className="num">{q ? formatVnd(q * l.donGia) : "—"}</td>
+                <td className="num">{q ? formatVnd(q * l.donGia) : ""}</td>
               </tr>
             );
           })}

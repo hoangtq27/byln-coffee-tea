@@ -585,3 +585,33 @@ input, select, textarea, button, option, optgroup { font-family: "Arimo", Arial,
 /* Hộp "Thêm món" vào đơn (Figma 880 × 528) */
 .modal-wide { max-width: calc(880 * var(--u)); }
 .picker .table td, .picker .table th { padding-left: calc(14 * var(--u)); padding-right: calc(14 * var(--u)); }
+
+/* ===== PROMPT 5 ===== */
+/* Thông báo trượt: ô chữ nền 4E3529 (độ mờ 24% như thanh tiêu đề Figma), chữ 2E2621 */
+.toast { background: linear-gradient(rgba(78, 53, 41, 0.24), rgba(78, 53, 41, 0.24)), #fff; color: #2e2621; }
+/* Báo cáo doanh thu: nút chưa chọn chữ 402B21 đậm nền F5EDE0; nhãn ngày chữ trắng đậm nền 402B21; giá trị ngày chữ 402B21 đậm nền F5EDE0 */
+.seg-split .seg-btn { font-weight: 700; color: #402b21; background: #f5ede0; }
+.date-tag { background: #402b21; color: #fff; font-weight: 700; }
+.date-val .date-plain-btn { background: #f5ede0; color: #402b21; font-weight: 700; border-color: #f5ede0; }
+/* Quản lý ca làm: chỉ icon lịch (không viền nút), ngày "Thứ Hai, 09/11/2026" màu 2A211C in đậm sát bên phải */
+.date-icon-btn { width: auto; height: calc(50 * var(--u)); border: 0; background: none; padding: 0; display: inline-flex; align-items: center; gap: calc(10 * var(--u)); cursor: pointer; }
+.date-icon-btn:hover { background: none; opacity: 0.8; }
+.date-icon-label { color: #2a211c; font-weight: 700; font-size: calc(24 * var(--u)); white-space: nowrap; }
+/* Nút trong hộp xác nhận xóa (Figma) */
+.btn.btn-c-cancel { background: #faebe8; color: #ad4a40; border-color: #faebe8; font-weight: 700; }
+.btn.btn-c-warn { background: #faf2e0; color: #ad7a38; border-color: #faf2e0; font-weight: 700; }
+.btn.btn-c-ok { background: #e8f2e8; color: #4f7559; border-color: #e8f2e8; font-weight: 700; }
+.btn.btn-c-cancel:hover:not(:disabled), .btn.btn-c-warn:hover:not(:disabled), .btn.btn-c-ok:hover:not(:disabled) { filter: brightness(0.96); }
+/* Bố cục dọc: đường kẻ phân cách phía trên hàng nút (Figma: divider y=229, nút y=243) */
+.confirm.stacked .confirm-actions { margin-top: calc(93 * var(--u)); padding-top: calc(14 * var(--u)); border-top: 1px solid var(--line); }
+.confirm.stacked .confirm-actions .btn:last-child { margin-left: 0; }
+.confirm.stacked .confirm-actions { justify-content: space-between; }
+/* Xóa tài khoản (Figma 554×314): câu hỏi 2 dòng lùi vào, nút Xác nhận | Khóa tài khoản này | Hủy */
+.modal:has(.confirm.stacked.acc-del) { max-width: calc(554 * var(--u)); padding: calc(26 * var(--u)) calc(10 * var(--u)); }
+.confirm.stacked.acc-del { padding: 0; }
+.confirm.stacked.acc-del .confirm-icon { margin-left: calc(21 * var(--u)); }
+.confirm.stacked.acc-del h3 { margin: calc(20 * var(--u)) 0 0 calc(44 * var(--u)); max-width: calc(477 * var(--u)); line-height: 1.17; }
+.confirm.stacked.acc-del .confirm-actions { margin: calc(72 * var(--u)) 0 0; gap: calc(20 * var(--u)); }
+.confirm.stacked.acc-del .confirm-actions .btn:nth-child(1) { min-width: calc(150 * var(--u)); }
+.confirm.stacked.acc-del .confirm-actions .btn:nth-child(2) { min-width: calc(259 * var(--u)); }
+.confirm.stacked.acc-del .confirm-actions .btn:nth-child(3) { min-width: calc(84 * var(--u)); }
