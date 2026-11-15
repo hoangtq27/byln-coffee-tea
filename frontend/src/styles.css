@@ -653,3 +653,5 @@ input, select, textarea, button, option, optgroup { font-family: "Arimo", Arial,
 }
 .nav-subitem:last-child::after { top: calc(-6 * var(--u)); height: calc(30 * var(--u)); width: calc(40 * var(--u)); border-bottom-left-radius: calc(22 * var(--u)) calc(20 * var(--u)); }
 .nav-subitem.active::before, .nav-subitem.active::after { border-color: #000; }
+/* Nội dung bị đẩy xuống để không bị thông báo trượt đè lên (chuyển động mượt) */
+[data-toast-push] { transition: margin-top 0.25s ease, top 0.25s ease; }

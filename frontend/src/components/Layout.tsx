@@ -100,7 +100,6 @@ export function Shell() {
                 >
                   <span className="nav-glyph" aria-hidden="true">{it.glyph}</span>
                   <span>{it.label}</span>
-                  <span className={`chev${open[it.key] ? " up" : ""}`}>▾</span>
                 </button>
                 {open[it.key] && (
                   <div className="nav-sub">
