@@ -8,3 +8,6 @@
 <button type="button" className="btn btn-light" onClick={() => setDraft(null)}>
               Hủy
             </button>
+
+
+Lệnh chạy PROMPT 4: Như bạn đã nói chưa đối chiếu hết mục 1, hãy tiếp tục phần đó. Sau đó, tiếp tục build theo yêu cầu trong file PROMPT_CLAUDE_4
