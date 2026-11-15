@@ -329,7 +329,7 @@ const Req = ({ children }: { children: string }) => (
 function TimeInput({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: boolean }) {
   return (
     <div className="time-in">
-      <input className={`input${error ? " input-error" : ""}`} value={value} maxLength={5} placeholder="HH:mm" onChange={(e) => onChange(e.target.value)} />
+      <input className={`input${error ? " input-error" : ""}`} value={value} maxLength={5} onChange={(e) => onChange(e.target.value)} />
       <ClockIcon />
     </div>
   );
@@ -366,7 +366,7 @@ function CreateDialog({ types, emps, onClose, onDone }: { types: ShiftType[]; em
     setErr({ where: "", msg: "" });
     const f = from, t = single ? from : to;
     // Kiểm tra các trường bắt buộc theo thứ tự trên biểu mẫu
-    if (!f) return fail("date", MSG_NO_DATE, "from");
+    if (!f) return fail("date", MSG_NO_DATE, "dates"); // tô đỏ cả ô Từ ngày và Đến ngày
     if (!t) return fail("date", MSG_NO_DATE, "to");
     if (f > t) return fail("date", MSG_BAD_TIME, "to");
     if (!shiftId) return fail("shift", MSG_NO_SHIFT, "shift");
@@ -411,11 +411,11 @@ function CreateDialog({ types, emps, onClose, onDone }: { types: ShiftType[]; em
         <div className="grid-2">
           <div className="form-row">
             <label>Từ ngày</label>
-            <DateInput value={from} onChange={setFrom} error={err.field === "from"} />
+            <DateInput value={from} onChange={setFrom} error={err.field === "from" || err.field === "dates"} />
           </div>
           <div className="form-row">
             <label>Đến ngày</label>
-            <DateInput value={single ? from : to} onChange={setTo} disabled={single} error={err.field === "to"} />
+            <DateInput value={single ? from : to} onChange={setTo} disabled={single} error={err.field === "to" || err.field === "dates"} />
           </div>
         </div>
         {msgAt("date")}
