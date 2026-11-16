@@ -14,7 +14,6 @@ interface Emp {
 }
 const SYS_ERR = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!";
 const PW_MSG = "Mật khẩu không đạt yêu cầu!";
-const HAS_ACC = "Nhân viên này đã có tài khoản!";
 
 function EyeIcon({ off }: { off: boolean }) {
   return (
@@ -83,12 +82,9 @@ export default function AccountForm({ account, onClose, onSaved }: { account: Ac
       onSaved();
     } catch (err) {
       if (err instanceof ApiError) {
-        const { maNhanVien, ...rest } = err.fields;
-        setErrs(rest);
-        // Nhân viên đã có tài khoản: báo bằng thông báo trượt ngang (các điều kiện khác đã hợp lệ)
-        if (maNhanVien === HAS_ACC && !Object.keys(rest).length) toast.error(HAS_ACC);
-        else if (maNhanVien && !Object.keys(rest).length) toast.error(maNhanVien);
-        else if (!Object.keys(err.fields).length) toast.error(err.message);
+        // Lỗi theo trường (vd "Nhân viên này đã có tài khoản!") hiển thị ngay dưới trường tương ứng
+        setErrs(err.fields);
+        if (!Object.keys(err.fields).length) toast.error(err.message);
       } else toast.error(SYS_ERR);
     } finally {
       setBusy(false);
@@ -180,8 +176,13 @@ export default function AccountForm({ account, onClose, onSaved }: { account: Ac
               placeholder="Chọn mã nhân viên"
               options={empOptions}
               listWidth={380}
-              onChange={(v) => setMaNv(v === maNv ? "" : v)}
+              error={!!errs.maNhanVien}
+              onChange={(v) => {
+                setMaNv(v === maNv ? "" : v);
+                setErrs((x) => ({ ...x, maNhanVien: "" }));
+              }}
             />
+            {errs.maNhanVien && <div className="err err-right">{errs.maNhanVien}</div>}
           </div>
           <div className="form-row">
             <label htmlFor="vt">
