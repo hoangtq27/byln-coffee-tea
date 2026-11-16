@@ -680,3 +680,41 @@ input, select, textarea, button, option, optgroup { font-family: "Arimo", Arial,
   .report-go-cell { transform: translateY(calc(1.5 * var(--u))); }
   .report-go-cell .btn { width: calc(200 * var(--u)); min-width: 0; height: calc(55 * var(--u)); padding: 0; }
 }
+
+/* ===== PROMPT 7 ===== */
+/* Chọn món (tạo đơn): món được chọn viền nâu đậm 3F2A20, nền F5EDE0, dấu tick góc trên phải; mã đậm, giá đậm */
+.dish-card.picked { background: #f5ede0; border-color: #3f2a20; box-shadow: 0 0 0 1px #3f2a20; }
+.dish-tick { position: absolute; top: calc(19 * var(--u)); right: calc(21 * var(--u)); width: calc(26 * var(--u)); height: calc(26 * var(--u)); min-width: 16px; min-height: 16px; color: #3f2a20; }
+.dish-code { font-weight: 700; }
+.dish-price { font-weight: 700; color: var(--ink); }
+.dish-card.off .dish-price { color: var(--muted); }
+
+/* Sửa tài khoản: trường Mã tài khoản chỉ đọc (nền F0E7D8, không viền, chữ xám) */
+.input.input-ro, .input.input-ro:focus { background: #f0e7d8; border-color: #f0e7d8; color: var(--muted); box-shadow: none; cursor: default; }
+
+/* So sánh dữ liệu doanh thu — theo Figma (khung 1426 rộng, lệch vào 34 so với tiêu đề trang) */
+.compare-chart .card-title { margin: 0; }
+.cbars { display: flex; flex-direction: column; gap: calc(24 * var(--u)); margin-top: calc(92 * var(--u)); padding-left: calc(30 * var(--u)); }
+.cbar-row { display: grid; grid-template-columns: calc(166 * var(--u)) calc(340 * var(--u)); column-gap: calc(20 * var(--u)); align-items: center; }
+.cbar-label { font-weight: 700; color: var(--ink); font-size: calc(22 * var(--u)); white-space: nowrap; }
+.cbar-track { height: calc(27 * var(--u)); background: #f5ede0; border-radius: calc(8 * var(--u)); overflow: hidden; }
+.cbar-fill { height: 100%; border-radius: calc(8 * var(--u)); transition: width 0.4s ease; }
+.cbar-1 { background: #e8d9c4; }
+.cbar-2 { background: #784f39; }
+.compare-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: calc(42 * var(--u)) calc(48 * var(--u)); }
+.compare-stats .stat { min-height: calc(168 * var(--u)); }
+.compare-stats .stat-label { color: var(--ink); }
+.compare-stats .stat-value { font-size: calc(22 * var(--u)); }
+.compare-stats .text-green { color: #4f7559; }
+.compare-result { display: flex; flex-direction: column; gap: calc(26 * var(--u)); }
+.compare-chart { padding: calc(24 * var(--u)) calc(27 * var(--u)); }
+@media (min-width: 1100px) {
+  .compare-card, .compare-result { margin-left: calc(34 * var(--u)); margin-right: calc(37 * var(--u)); }
+  .compare-card { position: relative; height: calc(211 * var(--u)); margin-top: calc(57 * var(--u)); padding: calc(24 * var(--u)) calc(27 * var(--u)) 0; }
+  .compare-card > .card-title { margin: 0; line-height: calc(28 * var(--u)); }
+  .compare-card .compare-filters { padding: 0; display: block; }
+  .compare-card .compare-dates { position: absolute; left: calc(34 * var(--u)); top: calc(101 * var(--u)); padding: 0; gap: calc(21 * var(--u)); flex-wrap: nowrap; }
+  .compare-card .compare-dates .field-col label { line-height: calc(28 * var(--u)); }
+  .compare-card .compare-btn { position: absolute; left: calc(1169 * var(--u)); top: calc(68 * var(--u)); width: calc(194 * var(--u)); min-width: 0; height: calc(54 * var(--u)) !important; margin: 0; padding: 0; }
+  .compare-result { display: grid; grid-template-columns: 703fr 654fr; column-gap: calc(68 * var(--u)); margin-top: calc(118 * var(--u)); }
+}

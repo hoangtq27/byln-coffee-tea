@@ -169,7 +169,7 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
       try {
         const r = await put<{ message: string }>(`/orders/${id}`, { trangThaiDon });
         toast.success(r.message);
-        await loadOrder();
+        nav("/orders"); // cập nhật thành công -> quay về màn hình Quản lý đơn hàng ban đầu
       } catch (e) {
         toast.error(e instanceof ApiError ? e.message : "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!");
       } finally {
@@ -209,8 +209,7 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
       } else {
         const r = await put<{ message: string }>(`/orders/${id}`, body);
         toast.success(r.message);
-        await loadOrder();
-        setErrs({});
+        nav("/orders"); // cập nhật thành công -> quay về màn hình Quản lý đơn hàng ban đầu
       }
     } catch (e) {
       if (e instanceof ApiError) {
@@ -555,6 +554,11 @@ export default function OrderForm({ mode }: { mode: "create" | "edit" }) {
                   onClick={() => toggleDish(d)}
                 >
                   <span className="dish-code">{d.maMon}</span>
+                  {pickedNow && (
+                    <svg className="dish-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M4.5 12.5l5 5L19.5 7" />
+                    </svg>
+                  )}
                   <span className="dish-name">{d.tenMon}</span>
                   <span className="dish-price">{formatVnd(d.giaBan)}</span>
                   {off && <span className="dish-off">Ngừng bán</span>}
