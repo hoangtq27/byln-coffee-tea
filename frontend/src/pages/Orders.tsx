@@ -35,6 +35,8 @@ export default function Orders() {
         setItems((prev) => (offset === 0 ? r.items : [...prev, ...r.items]));
         setTotal(r.total);
         setError("");
+        // Không tìm thấy đơn hàng: báo bằng thông báo trượt ngang (không ghi trong danh sách)
+        if (offset === 0 && q && !r.items.length) toast.error("Không tìm thấy đơn hàng");
       } catch (e) {
         if (id !== seq.current) return;
         const msg = e instanceof ApiError ? e.message : "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau!";
@@ -136,7 +138,7 @@ export default function Orders() {
               {!loading && !items.length && (
                 <tr>
                   <td colSpan={12} className="empty">
-                    {error || "Không tìm thấy đơn hàng"}
+                    {error}
                   </td>
                 </tr>
               )}

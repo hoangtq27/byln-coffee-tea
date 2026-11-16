@@ -113,6 +113,13 @@ export default function AccountForm({ account, onClose, onSaved }: { account: Ac
         <h3 className="acc-title">{edit ? "Sửa thông tin tài khoản" : "Tạo tài khoản"}</h3>
         <p className="modal-sub">{edit ? `Đang sửa tài khoản ${account.maTaiKhoan}` : "Cấp tài khoản đăng nhập cho nhân viên đã có trong hệ thống"}</p>
 
+        {edit && (
+          <div className="form-row">
+            <label htmlFor="mtk">Mã tài khoản</label>
+            <input id="mtk" className="input input-ro" value={account.maTaiKhoan} readOnly tabIndex={-1} />
+          </div>
+        )}
+
         <div className="form-row">
           <label htmlFor="tdn">
             Tên đăng nhập<span className="req">*</span>

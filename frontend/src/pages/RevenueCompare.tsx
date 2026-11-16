@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { CompareBars } from "../components/BarChart";
 import { DateInput } from "../components/DateInput";
 import { Page } from "../components/Layout";
 import { useToast } from "../components/Toast";
 import { ApiError, get } from "../lib/api";
-import { formatVnd } from "../lib/format";
+import { formatMoney } from "../lib/format";
 
 interface Period {
+  from: string;
   label: string;
   tongDoanhThu: number;
   soDonHang: number;
@@ -54,11 +54,15 @@ export default function RevenueCompare() {
   };
 
   const up = data ? data.chenhLech >= 0 : true;
-  const pct = data ? `${data.tangTruong >= 0 ? "+" : ""}${data.tangTruong.toFixed(1).replace(".", ",")}%` : "";
+  const pct = data ? `${data.tangTruong >= 0 ? "+" : ""}${data.tangTruong.toFixed(2).replace(".", ",")}%` : "";
+  const vnd = (n: number) => `${formatMoney(n)} ₫`;
+  // Nhãn trên biểu đồ: kỳ trọn tháng hiển thị "Tháng 9/2026"
+  const barLabel = (p: Period) => (/^Tháng \d+$/.test(p.label) ? `${p.label}/${p.from.slice(0, 4)}` : p.label);
+  const max = data ? Math.max(data.ky1.tongDoanhThu, data.ky2.tongDoanhThu, 1) : 1;
 
   return (
     <Page crumbs={["Quản lý doanh thu", "So sánh dữ liệu doanh thu"]} title="So sánh dữ liệu doanh thu">
-      <section className="card">
+      <section className="card compare-card">
         <div className="card-title">Thiết lập khoảng thời gian</div>
         <div className="compare-filters">
           <div className="compare-dates">
@@ -86,29 +90,34 @@ export default function RevenueCompare() {
       </section>
 
       {data && (
-        <>
-          <section className="card">
+        <div className="compare-result reveal">
+          <section className="card compare-chart">
             <div className="card-title">Đối chiếu doanh thu</div>
-            <CompareBars
-              items={[
-                { label: `Kỳ 1 · ${data.ky1.label}`, value: data.ky1.tongDoanhThu },
-                { label: `Kỳ 2 · ${data.ky2.label}`, value: data.ky2.tongDoanhThu },
-              ]}
-            />
+            <div className="cbars">
+              {[data.ky1, data.ky2].map((p, i) => (
+                <div className="cbar-row" key={i}>
+                  <div className="cbar-label">{barLabel(p)}</div>
+                  <div className="cbar-track" title={vnd(p.tongDoanhThu)}>
+                    {/* kỳ lớn nhất chiếm ~86% thanh nền (theo Figma) */}
+                    <div className={`cbar-fill cbar-${i + 1}`} style={{ width: `${(p.tongDoanhThu / max) * 86}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
-          <div className="stat-grid">
-            <div className="stat"><div className="stat-label">Kỳ 1 · {data.ky1.label}</div><div className="stat-value">{formatVnd(data.ky1.tongDoanhThu)}</div></div>
-            <div className="stat"><div className="stat-label">Kỳ 2 · {data.ky2.label}</div><div className="stat-value">{formatVnd(data.ky2.tongDoanhThu)}</div></div>
+          <div className="compare-stats">
+            <div className="stat"><div className="stat-label">Kỳ 1 · {data.ky1.label}</div><div className="stat-value">{vnd(data.ky1.tongDoanhThu)}</div></div>
+            <div className="stat"><div className="stat-label">Kỳ 2 · {data.ky2.label}</div><div className="stat-value">{vnd(data.ky2.tongDoanhThu)}</div></div>
             <div className="stat">
               <div className="stat-label">Chênh lệch</div>
-              <div className={`stat-value ${up ? "text-green" : "text-red"}`}>{`${up ? "+" : "−"}${formatVnd(Math.abs(data.chenhLech))}`}</div>
+              <div className={`stat-value ${up ? "text-green" : "text-red"}`}>{`${up ? "+" : "−"}${vnd(Math.abs(data.chenhLech))}`}</div>
             </div>
             <div className="stat">
               <div className="stat-label">Tăng trưởng</div>
               <div className={`stat-value ${up ? "text-green" : "text-red"}`}>{pct}</div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </Page>
   );
