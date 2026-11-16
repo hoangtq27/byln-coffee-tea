@@ -1,4 +1,3 @@
 Yêu cầu:
 
 1. Chỗ Quản lý doanh thu sổ xuống Báo cáo doanh thu và So sánh doanh thu, Quản lý nhân viên sổ xuống Quản lý thông tin nhân viên và Quản lý ca làm, thêm cái "nhánh cây" cho giống như trong Figma. Phần Báo cáo doanh thu, khung chọn thời gian: không hiện chữ "Tháng" mà chỉ hiện số; 2 mốc Ngày bắt đầu và Ngày kết thúc: màu chữ FFFFFF, màu nền 402B21, Các ngày trong khoảng thời gian giữa 2 mốc: màu chữ 2E2621, màu nền F5EDE0; <01/11/2026> dưới Ngày bắt đầu và Ngày kết thúc căn giữa hai ô. Chỗ tạo nhân viên mới: ô nhập địa chỉ hiện "Nhập địa chỉ" chứ không phải "Địa chỉ", không hiện icon lịch. Khung chọn lịch: Hiển thị Mo -> Su chứ không phải T2-> CN; các ngày ở tháng khác vẫn hiển thị và có mã màu là 9A9693 không có nền. Ở tất cả các thông báo trượt ngang: màu nền của chữ là 4E3529, màu chữ E7E1DC.
-
